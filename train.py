@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
-
+import wandb
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -98,6 +98,10 @@ def train():
   model.parameters
   model.to(device)
   
+  project = "KLUE-test" # W&B Projects
+  display_name = "wandb_test" # Model_name displayed in W&B Projects
+  wandb.init(project=project, name=display_name)
+  
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
@@ -117,7 +121,8 @@ def train():
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True 
+    load_best_model_at_end = True,
+    report_to="wandb",  # enable logging to W&B
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
