@@ -29,7 +29,9 @@ def preprocessing_dataset(dataset):
 
     subject_entity.append(i)
     object_entity.append(j)
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  # sentence preprocessing들어가야 한다.
+  filtered_sentence = sentence_filter(dataset['sentence'], hanza=True)
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':filtered_sentence ,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir, test_size, shuffle):
@@ -56,6 +58,13 @@ def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
         X_test = X.iloc[test_idx:]
     return X_train, X_test
 
+def sentence_filter(sentence, hanza=False):
+    if hanza:
+        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]|[一-龥]+, ', repl='', regex=True) # 한자, 공백
+    else:
+        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]', repl='', regex=True)
+    return series
+
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
@@ -73,3 +82,6 @@ def tokenized_dataset(dataset, tokenizer):
       add_special_tokens=True,
       )
   return tokenized_sentences
+
+if __name__ == '__main__':
+  load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True)
