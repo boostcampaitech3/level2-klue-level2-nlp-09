@@ -30,7 +30,7 @@ def preprocessing_dataset(dataset):
     subject_entity.append(i)
     object_entity.append(j)
   # sentence preprocessing들어가야 한다.
-  filtered_sentence = sentence_filter(dataset['sentence'], hanza=True)
+  filtered_sentence = sentence_filter(dataset['sentence'], hanza=False)
   out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':filtered_sentence ,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
@@ -60,8 +60,8 @@ def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
         X_train = X.iloc[train_idx]
         X_test = X.iloc[test_idx]
     else:
-        X_train = X.iloc[:train_idx]
-        X_test = X.iloc[test_idx:]
+        X_train = X.iloc[:train_num]
+        X_test = X.iloc[train_num:]
     return X_train, X_test
 
 def sentence_filter(sentence, hanza=False):
