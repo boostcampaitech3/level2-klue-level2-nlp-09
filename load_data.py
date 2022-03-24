@@ -56,6 +56,10 @@ def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
         X_test = X.iloc[test_idx:]
     return X_train, X_test
 
+def stratified_choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
+  pass
+
+
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
