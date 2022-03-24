@@ -43,6 +43,12 @@ def load_data(dataset_dir, test_size, shuffle):
   eval_dataset = preprocessing_dataset(pd_eval)
   return train_dataset, eval_dataset
 
+def load_test_data(dataset_dir):
+  """ csv 파일을 경로에 맡게 불러 옵니다. """
+  pd_dataset = pd.read_csv(dataset_dir)
+  dataset = preprocessing_dataset(pd_dataset)
+  return dataset
+
 def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
     test_num = int(X.shape[0] * test_size)
     train_num = X.shape[0] - test_num
