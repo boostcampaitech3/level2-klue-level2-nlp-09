@@ -1,0 +1,12 @@
+{
+    "entity" : [
+        "[sub]","[obj]","[/sub]","[/obj]"
+    ],
+    "typed_entity" : [
+        "<S:PER>","</S:PER>","<S:ORG>","</S:ORG>",
+        "<O:PER>","<O:ORG>","<O:POH>","<O:DAT>","<O:LOC>","<O:NOH>",
+        "</O:PER>","</O:ORG>","</O:POH>","</O:DAT>","</O:LOC>","</O:NOH>",
+        "<S:PER>","<S:ORG>","<S:POH>","<S:DAT>","<S:LOC>","<S:NOH>",
+        "</S:PER>","</S:ORG>","</S:POH>","</S:DAT>","</S:LOC>","</S:NOH>"
+    ]
+  }
