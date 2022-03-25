@@ -39,7 +39,7 @@ def load_data(dataset_dir, test_size, shuffle):
   pd_dataset = pd.read_csv(dataset_dir)
   # train_test split
   pd_train, pd_eval = choice_train_test_split(pd_dataset, test_size, shuffle)
-  # pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size, shuffle)
+  # pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size, random_state)
   train_dataset = preprocessing_dataset(pd_train)
   eval_dataset = preprocessing_dataset(pd_eval)
   return train_dataset, eval_dataset
@@ -59,7 +59,7 @@ def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
         X_test = X.iloc[test_idx:]
     return X_train, X_test
 
-def stratified_choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
+def stratified_choice_train_test_split(X, test_size=0.2, random_state=15):
   """ 라벨별로 일정 비율로 추출합니다 (dict_label_to_num.pkl 경로 확인 필수)"""
   split = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
 
