@@ -70,7 +70,8 @@ def main(args):
   # load tokenizer
   Tokenizer_NAME = "klue/roberta-large"
   tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
-  tokenizer.tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
+  if marking_mode != "normal":
+    tokenizer.tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
   ## load my model
   MODEL_NAME = args.model_dir # model dir.
