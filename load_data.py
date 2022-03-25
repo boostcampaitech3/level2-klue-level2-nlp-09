@@ -2,7 +2,6 @@ import pickle as pickle
 import os
 import pandas as pd
 import torch
-import numpy as np
 
 
 class RE_Dataset(torch.utils.data.Dataset):
@@ -29,47 +28,15 @@ def preprocessing_dataset(dataset):
 
     subject_entity.append(i)
     object_entity.append(j)
-  # sentence preprocessing들어가야 한다.
-  filtered_sentence = sentence_filter(dataset['sentence'], hanza=False)
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':filtered_sentence ,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, test_size, shuffle):
-  """ csv 파일을 경로에 맡게 불러 옵니다. """
-  pd_dataset = pd.read_csv(dataset_dir)
-  # train_test split
-  pd_train, pd_eval = choice_train_test_split(pd_dataset, test_size, shuffle)
-  train_dataset = preprocessing_dataset(pd_train)
-  eval_dataset = preprocessing_dataset(pd_eval)
-  return train_dataset, eval_dataset
-
-def load_test_data(dataset_dir):
+def load_data(dataset_dir):
   """ csv 파일을 경로에 맡게 불러 옵니다. """
   pd_dataset = pd.read_csv(dataset_dir)
   dataset = preprocessing_dataset(pd_dataset)
+  
   return dataset
-
-def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
-    test_num = int(X.shape[0] * test_size)
-    train_num = X.shape[0] - test_num
-    if shuffle:
-        np.random.seed(random_state)
-        train_idx = np.random.choice(X.shape[0], train_num, replace=False)
-        #-- way 1: using np.setdiff1d() # trainset의 idndes를 제외한 나머지 index 추출 # 차집합 연산
-        test_idx = np.setdiff1d(range(X.shape[0]), train_idx)
-        X_train = X.iloc[train_idx]
-        X_test = X.iloc[test_idx]
-    else:
-        X_train = X.iloc[:train_num]
-        X_test = X.iloc[train_num:]
-    return X_train, X_test
-
-def sentence_filter(sentence, hanza=False):
-    if hanza:
-        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]|[一-龥]+, ', repl='', regex=True) # 한자, 공백
-    else:
-        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]', repl='', regex=True)
-    return series
 
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
@@ -88,6 +55,3 @@ def tokenized_dataset(dataset, tokenizer):
       add_special_tokens=True,
       )
   return tokenized_sentences
-
-if __name__ == '__main__':
-  load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True)
