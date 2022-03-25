@@ -122,6 +122,8 @@ def train():
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",  # enable logging to W&B
+    fp16 = True,        # whether to use 16bit (mixed) precision training
+    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
@@ -130,6 +132,9 @@ def train():
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics         # define metrics function
   )
+
+
+
 
   # train model
   trainer.train()
