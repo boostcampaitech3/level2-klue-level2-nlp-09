@@ -24,13 +24,14 @@ def preprocessing_dataset(dataset):
   """ 처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
   subject_entity = []
   object_entity = []
-  
   for sub,obj in zip(dataset['subject_entity'], dataset['object_entity']):
     sub =eval(sub)
     obj =eval(obj)
     subject_entity.append(sub['word'])
     object_entity.append(obj['word'])
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence': dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  # sentence preprocessing들어가야 한다.
+  filtered_sentence = sentence_filter(dataset['sentence'], hanza=False)
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':filtered_sentence,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir, test_size, shuffle):
@@ -44,6 +45,12 @@ def load_data(dataset_dir, test_size, shuffle):
   eval_dataset = preprocessing_dataset(pd_eval)
   return train_dataset, eval_dataset
 
+def load_test_data(dataset_dir):
+  """ csv 파일을 경로에 맡게 불러 옵니다. """
+  pd_dataset = pd.read_csv(dataset_dir)
+  dataset = preprocessing_dataset(pd_dataset)
+  return dataset
+
 def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
     test_num = int(X.shape[0] * test_size)
     train_num = X.shape[0] - test_num
@@ -55,10 +62,18 @@ def choice_train_test_split(X, test_size=0.2, shuffle=True, random_state=15):
         X_train = X.iloc[train_idx]
         X_test = X.iloc[test_idx]
     else:
-        X_train = X.iloc[:train_idx]
-        X_test = X.iloc[test_idx:]
+        X_train = X.iloc[:train_num]
+        X_test = X.iloc[train_num:]
     return X_train, X_test
 
+
+def sentence_filter(sentence, hanza=False):
+    if hanza:
+        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]|[一-龥]+, ', repl='', regex=True) # 한자, 공백
+    else:
+        series = sentence.str.replace(pat='[^A-Za-z0-9가-힣.?!,()~‘’“”"":%&《》〈〉''㈜·\-\'+\s一-龥]', repl='', regex=True)
+    return series
+  
 def stratified_choice_train_test_split(X, test_size=0.2, random_state=15):
   """ 라벨별로 일정 비율로 추출합니다 (dict_label_to_num.pkl 경로 확인 필수)"""
   split = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
@@ -91,3 +106,6 @@ def tokenized_dataset(dataset, tokenizer):
       add_special_tokens=True,
       )
   return tokenized_sentences
+
+if __name__ == '__main__':
+  load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True)
