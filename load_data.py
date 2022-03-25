@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import torch
 import numpy as np
+from sklearn.model_selection import StratifiedShuffleSplit
 
 
 class RE_Dataset(torch.utils.data.Dataset):
