@@ -4,7 +4,7 @@ from load_data import *
 import pandas as pd
 import torch
 import torch.nn.functional as F
-
+import json
 import pickle as pickle
 import numpy as np
 import argparse
@@ -64,9 +64,14 @@ def main(args):
     주어진 dataset csv 파일과 같은 형태일 경우 inference 가능한 코드입니다.
   """
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+  marking_mode = "entity"
+  with open("marking_mode_tokens.json","r") as json_file:
+    mode2special_token = json.load(json_file)
   # load tokenizer
   Tokenizer_NAME = "klue/roberta-large"
   tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
+  if marking_mode != "normal":
+    tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
   ## load my model
   MODEL_NAME = args.model_dir # model dir.

@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
 import wandb
+import json
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -70,13 +71,20 @@ def train():
   # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = "klue/bert-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
+  # set marking mode
+  marking_mode = "entity"
+  with open("marking_mode_tokens.json","r") as json_file:
+    mode2special_token = json.load(json_file)
   # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True)
+  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True, marking_mode=marking_mode)
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
-
+  #add special tokens
+  add_token_num = 0
+  if marking_mode != " normal":
+    add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
+  
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer)
   tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
@@ -93,6 +101,8 @@ def train():
   model_config.num_labels = 30
 
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  #resize models vocab_size(add add_token_num) 
+  model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
   print(model.config)
   model.parameters
   model.to(device)
@@ -122,8 +132,6 @@ def train():
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",  # enable logging to W&B
-    fp16 = True,        # whether to use 16bit (mixed) precision training
-    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
@@ -132,9 +140,6 @@ def train():
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics         # define metrics function
   )
-
-
-
 
   # train model
   trainer.train()
