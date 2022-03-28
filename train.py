@@ -72,7 +72,7 @@ def train():
   MODEL_NAME = "klue/bert-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   # set marking mode
-  marking_mode = "typed_entity"
+  marking_mode = "normal"
   with open("marking_mode_tokens.json","r") as json_file:
     mode2special_token = json.load(json_file)
   # load dataset
@@ -132,6 +132,8 @@ def train():
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",  # enable logging to W&B
+    fp16 = True,        # whether to use 16bit (mixed) precision training
+    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
