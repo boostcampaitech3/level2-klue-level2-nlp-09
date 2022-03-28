@@ -70,7 +70,7 @@ def main(args):
   # load tokenizer
   Tokenizer_NAME = "klue/roberta-large"
   tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
-  if marking_mode != "normal":
+  if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
     tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
   ## load my model

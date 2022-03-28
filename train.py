@@ -82,7 +82,7 @@ def train():
   dev_label = label_to_num(dev_dataset['label'].values)
   #add special tokens
   add_token_num = 0
-  if marking_mode != " normal":
+  if marking_mode != " normal" and  marking_mode != "typed_entity_punc":
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
   # tokenizing dataset
