@@ -38,6 +38,9 @@ def preprocessing_dataset(dataset, marking_mode):
     elif marking_mode =="typed_entity":
       sentence = sentence.replace(sub['word'], f"<S:{sub['type']}> {sub['word']} </S:{sub['type']}>")
       sentence = sentence.replace(obj['word'], f"<O:{obj['type']}> {obj['word']} </O:{obj['type']}>")
+    elif marking_mode == "typed_entity_punc":
+      sentence = sentence.replace(sub['word'], f"@ * {korean_tag[sub['type']]} * {sub['word']} @")
+      sentence = sentence.replace(obj['word'], f"# ^ {korean_tag[obj['type']]} ^ {obj['word']} #")
     sentences.append(sentence)
   # sentence preprocessing들어가야 한다.
   out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})

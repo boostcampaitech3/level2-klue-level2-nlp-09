@@ -72,7 +72,7 @@ def train():
   MODEL_NAME = "klue/bert-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   # set marking mode
-  marking_mode = "entity"
+  marking_mode = "typed_entity"
   with open("marking_mode_tokens.json","r") as json_file:
     mode2special_token = json.load(json_file)
   # load dataset
@@ -82,7 +82,7 @@ def train():
   dev_label = label_to_num(dev_dataset['label'].values)
   #add special tokens
   add_token_num = 0
-  if marking_mode != " normal":
+  if marking_mode != " normal" and  marking_mode != "typed_entity_punc":
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
   # tokenizing dataset
