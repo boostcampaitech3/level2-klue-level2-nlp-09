@@ -9,6 +9,17 @@ from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassifi
 from load_data import *
 import wandb
 import json
+from transformers import set_seed
+import random
+
+def seed_everything(seed: int = 42):
+    random.seed(seed)                              
+    np.random.seed(seed)                           
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.manual_seed(seed)                        
+    torch.cuda.manual_seed(seed)  # type: ignore    
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = False  # type: ignore
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -160,4 +171,6 @@ def main():
   train()
 
 if __name__ == '__main__':
+  seed_everything(42)
+  # transformers.set_seed(42)
   main()
