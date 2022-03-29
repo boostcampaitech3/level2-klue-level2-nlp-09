@@ -1,7 +1,5 @@
 import json
 import os
-from transformers import TrainingArguments
-
 
 def save_record(config, training_args):
     """
@@ -40,30 +38,3 @@ def args2dict(training_args):
         key, value = param.split("=")
         args_dict[key] = value
     return args_dict
-
-if __name__ == '__main__':
-    with open("config.json","r") as js:
-        config = json.load(js)
-    training_args = TrainingArguments(
-    output_dir='./results',          # output directory
-    save_total_limit=5,              # number of total save model.
-    save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
-    per_device_eval_batch_size=16,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.01,               # strength of weight decay
-    logging_dir='./logs',            # directory for storing logs
-    logging_steps=100,              # log saving step.
-    evaluation_strategy='steps', # evaluation strategy to adopt during training
-                                # `no`: No evaluation during training.
-                                # `steps`: Evaluate every `eval_steps`.
-                                # `epoch`: Evaluate every end of epoch.
-    eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True,
-    report_to="wandb",  # enable logging to W&B
-    fp16 = True,        # whether to use 16bit (mixed) precision training
-    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
-    )
-    save_record(config, training_args)
