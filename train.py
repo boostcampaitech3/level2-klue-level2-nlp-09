@@ -63,31 +63,41 @@ def label_to_num(label):
     dict_label_to_num = pickle.load(f)
   for v in label:
     num_label.append(dict_label_to_num[v])
-  
   return num_label
 
 def train():
-  # load model and tokenizer
-  # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  # load_parameter: tokenizer, sentence preprocessing
+  tokenize_function_list = {"default": tokenized_dataset}
+  with open("config.json","r") as js:
+    config = json.load(js)
+    load_model = config['model_name']        # model
+    filter = config['sentence_filter']       # sentence_filter
+    marking_mode = config['marking_mode']    # marking_mode
+    tokenized = config['tokenized_function'] # tokenize_function
+    
+  tokenize_function = tokenize_function_list[tokenized]
+  # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
+  MODEL_NAME = load_model
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-  # set marking mode
-  marking_mode = "normal"
-  with open("marking_mode_tokens.json","r") as json_file:
-    mode2special_token = json.load(json_file)
-  # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", test_size=0.2, shuffle=True, marking_mode=marking_mode)
+  print("#################################################################################################################### \n",
+        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        "#################################################################################################################### \n")
 
+  # load dataset
+  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
-  #add special tokens
+  
+  # add vocab (special tokens)
+  with open("marking_mode_tokens.json","r") as json_file:
+    mode2special_token = json.load(json_file)
   add_token_num = 0
-  if marking_mode != " normal" and  marking_mode != "typed_entity_punc":
+  if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+  tokenized_train = tokenize_function(train_dataset, tokenizer)
+  tokenized_dev = tokenize_function(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
