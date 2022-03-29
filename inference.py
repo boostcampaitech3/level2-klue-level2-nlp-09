@@ -48,28 +48,32 @@ def num_to_label(label):
   
   return origin_label
 
-def load_test_dataset(dataset_dir, tokenizer, marking_mode = "normal"):
-  """
-    test dataset을 불러온 후,
-    tokenizing 합니다.
-  """
-  test_dataset = load_test_data(dataset_dir, marking_mode)
-  test_label = list(map(int,test_dataset['label'].values))
-  # tokenizing dataset
-  tokenized_test = tokenized_dataset(test_dataset, tokenizer)
-  return test_dataset['id'], tokenized_test, test_label
-
 def main(args):
   """
     주어진 dataset csv 파일과 같은 형태일 경우 inference 가능한 코드입니다.
   """
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-  marking_mode = "typed_entity"
+
+  # load_parameter: tokenizer, sentence preprocessing
+  tokenize_function_list = {"default": tokenized_dataset}
+  with open("config.json","r") as js:
+    config = json.load(js)
+    load_model = config['model_name']        # model
+    filter = config['sentence_filter']       # sentence_filter
+    marking_mode = config['marking_mode']    # marking_mode
+    tokenized = config['tokenized_function'] # tokenize_function
+  tokenize_function = tokenize_function_list[tokenized]
+  print("####################################################################################################################\n",
+        f"Model_name: {load_model}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        "####################################################################################################################\n")
+
+  # load tokenizer
+  Tokenizer_NAME = load_model
+  tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
+
+  # add_vocab
   with open("marking_mode_tokens.json","r") as json_file:
     mode2special_token = json.load(json_file)
-  # load tokenizer
-  Tokenizer_NAME = "klue/roberta-large"
-  tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
   if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
     tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
@@ -79,23 +83,28 @@ def main(args):
   model.parameters
   model.to(device)
 
-  ## load test datset
+  ## load_test_datset
   test_dataset_dir = "../dataset/test/test_data.csv"
-  test_id, test_dataset, test_label = load_test_dataset(test_dataset_dir, tokenizer, marking_mode)
-  Re_test_dataset = RE_Dataset(test_dataset ,test_label)
+  test_dataset = load_data(test_dataset_dir, train=False, filter=filter, marking_mode=marking_mode)
+
+  test_id = test_dataset['id'] 
+  test_label = list(map(int,test_dataset['label'].values))
+  # tokenizing dataset
+  tokenized_test = tokenize_function(test_dataset, tokenizer)
+
+  Re_test_dataset = RE_Dataset(tokenized_test ,test_label)
 
   ## predict answer
   pred_answer, output_prob = inference(model, Re_test_dataset, device) # model에서 class 추론
   pred_answer = num_to_label(pred_answer) # 숫자로 된 class를 원래 문자열 라벨로 변환.
   
   ## make csv file with predicted answer
-  #########################################################
-  # 아래 directory와 columns의 형태는 지켜주시기 바랍니다.
+  ################### 아래 directory와 columns의 형태는 지켜주시기 바랍니다.######################################
   output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':output_prob,})
-
-  output.to_csv('./prediction/submission.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
-  #### 필수!! ##############################################
+  output.to_csv('./prediction/submission.csv', index=False) 
+  ###################  최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장. ##############################################
   print('---- Finish! ----')
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
