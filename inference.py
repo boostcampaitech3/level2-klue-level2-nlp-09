@@ -64,7 +64,7 @@ def main(args):
     tokenized = config['tokenized_function'] # tokenize_function
   tokenize_function = tokenize_function_list[tokenized]
   print("####################################################################################################################\n",
-        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        f"Model_name: {load_model}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
         "####################################################################################################################\n")
 
   # load tokenizer

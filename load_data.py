@@ -50,8 +50,7 @@ def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
     eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
     return train_dataset, eval_dataset
   else:
-    pd_test = preprocessing_dataset(pd_dataset, filter, marking_mode)
-    test_dataset = preprocessing_dataset(pd_test, marking_mode)
+    test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
 
 ## sentence 전처리

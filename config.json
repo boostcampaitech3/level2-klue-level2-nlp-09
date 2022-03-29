@@ -1,9 +1,9 @@
-{   "_comment": ["model_name: [klue/bert-base, klue/roberta-large]",
+{   "_comment": ["model_name: ['klue/bert-base', 'klue/roberta-large']",
                  "filter: [true, false]", 
-                 "marking_mode: [normal, entity, typed_entity, typed_entity_punc]",
-                 "tokenized_function: [default, ]"],
+                 "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
+                 "tokenized_function: ['default', ]"],
 
-    "model_name" : "klue/bert-base",                 
+    "model_name" : "klue/roberta-large",                 
     "sentence_filter" : false, 
     "marking_mode" : "normal",
     "tokenized_function": "default"
