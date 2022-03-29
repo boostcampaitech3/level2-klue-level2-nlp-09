@@ -16,7 +16,9 @@ def save_record(config, training_args):
     "tokenized":  config['tokenized_function'],
     "epoch": args_dict['save_total_limit'], 
     "learning_rate": args_dict['learning_rate'], 
-    "train_batch_size": args_dict['per_device_train_batch_size']
+    "train_batch_size": args_dict['per_device_train_batch_size'],
+    "fp16": args_dict['fp16'],
+    "fp16_opt_level": args_dict['fp16_opt_level']
     }
 
     # path setting

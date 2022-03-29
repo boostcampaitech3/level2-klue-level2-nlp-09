@@ -75,6 +75,7 @@ def train():
     filter = config['sentence_filter']       # sentence_filter
     marking_mode = config['marking_mode']    # marking_mode
     tokenized = config['tokenized_function'] # tokenize_function
+    wandb_name = config['test_name']
     
   tokenize_function = tokenize_function_list[tokenized]
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
@@ -119,7 +120,7 @@ def train():
   model.to(device)
   
   project = "KLUE-test" # W&B Projects
-  display_name = "wandb_test" # Model_name displayed in W&B Projects
+  display_name = wandb_name # Model_name displayed in W&B Projects
   wandb.init(project=project, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
