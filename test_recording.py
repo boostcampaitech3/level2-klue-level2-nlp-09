@@ -14,7 +14,7 @@ def save_record(config, training_args):
     "filter":  config['sentence_filter'],
     "marking_mode":  config['marking_mode'],
     "tokenized":  config['tokenized_function'],
-    "epoch": args_dict['save_total_limit'], 
+    "epoch": args_dict['num_train_epochs'], 
     "learning_rate": args_dict['learning_rate'], 
     "train_batch_size": args_dict['per_device_train_batch_size'],
     "fp16": args_dict['fp16'],
