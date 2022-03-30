@@ -9,8 +9,8 @@ from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassifi
 from load_data import *
 import wandb
 import json
-from transformers import set_seed
 import random
+from test_recording import *
 
 def seed_everything(seed: int = 42):
     random.seed(seed)                              
@@ -85,6 +85,7 @@ def train():
     filter = config['sentence_filter']       # sentence_filter
     marking_mode = config['marking_mode']    # marking_mode
     tokenized = config['tokenized_function'] # tokenize_function
+    wandb_name = config['test_name']
     
   tokenize_function = tokenize_function_list[tokenized]
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
@@ -129,7 +130,7 @@ def train():
   model.to(device)
   
   project = "KLUE-test" # W&B Projects
-  display_name = "wandb_test" # Model_name displayed in W&B Projects
+  display_name = wandb_name # Model_name displayed in W&B Projects
   wandb.init(project=project, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
@@ -156,6 +157,8 @@ def train():
     fp16 = True,        # whether to use 16bit (mixed) precision training
     fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
+  # save test result 
+  save_record(config, training_args)
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
@@ -172,5 +175,4 @@ def main():
 
 if __name__ == '__main__':
   seed_everything(42)
-  # transformers.set_seed(42)
   main()
