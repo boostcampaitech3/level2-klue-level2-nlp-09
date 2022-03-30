@@ -2,7 +2,8 @@
                  "filter: [true, false]", 
                  "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
                  "tokenized_function: ['default', ]"],
-
+                 
+    "test_name": "test_entity",
     "model_name" : "klue/roberta-large",                 
     "sentence_filter" : false, 
     "marking_mode" : "normal",
