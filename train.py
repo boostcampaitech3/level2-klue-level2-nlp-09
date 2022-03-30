@@ -5,18 +5,7 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import (
-  AutoTokenizer, 
-  AutoConfig, 
-  AutoModelForSequenceClassification, 
-  Trainer, 
-  TrainingArguments, 
-  RobertaConfig,
-  RobertaTokenizer, 
-  RobertaForSequenceClassification, 
-  BertTokenizer,
-  EarlyStoppingCallback
-)    
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from load_data import *
 import wandb
 import json
