@@ -126,12 +126,12 @@ def tokenized_dataset(dataset, tokenizer, type):
     concat_entity.append(temp)
 
   tokenized_sentences = tokenizer(
-      concat_entity,
+      # concat_entity,
       list(dataset['sentence']),
       return_tensors="pt",
       padding=True,
       truncation=True,
-      max_length=256,
+      max_length=256, # 512로 변경 가능
       add_special_tokens=True,
       )
   return tokenized_sentences

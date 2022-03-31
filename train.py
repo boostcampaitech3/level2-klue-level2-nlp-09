@@ -109,6 +109,7 @@ def train():
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
   tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+  # print(tokenizer.decode(tokenized_train['input_ids'][0]))
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -124,7 +125,7 @@ def train():
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   #resize models vocab_size(add add_token_num) 
   model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
-  print(model.config)
+  # print(model.config)
   model.parameters
   model.to(device)
   
