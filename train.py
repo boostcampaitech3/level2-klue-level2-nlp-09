@@ -5,7 +5,7 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from load_data import *
 import wandb
 import json
@@ -13,6 +13,7 @@ import random
 from test_recording import *
 
 def seed_everything(seed: int = 42):
+    """Random seed(Reproducibility)"""
     random.seed(seed)                              
     np.random.seed(seed)                           
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -153,6 +154,7 @@ def train():
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
+    metric_for_best_model = 'micro f1 score',
     report_to="wandb",  # enable logging to W&B
     fp16 = True,        # whether to use 16bit (mixed) precision training
     fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
@@ -164,7 +166,8 @@ def train():
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
-    compute_metrics=compute_metrics         # define metrics function
+    compute_metrics=compute_metrics,         # define metrics function
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
   )
 
   # train model
