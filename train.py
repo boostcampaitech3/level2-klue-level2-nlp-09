@@ -96,7 +96,10 @@ def train():
         "#################################################################################################################### \n")
 
   # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
+  dataset_dir = "../dataset/train/train.csv"
+  # aug_dir = "aug_normal.csv"
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  # train_dataset, dev_dataset = load_aug_data(dataset_dir, aug_dir, train=True, filter=filter, marking_mode=marking_mode)  # augmented data 사용하는 경우
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -129,17 +132,18 @@ def train():
   model.parameters
   model.to(device)
   
-  project = "KLUE-test" # W&B Projects
-  display_name = wandb_name # Model_name displayed in W&B Projects
-  wandb.init(project=project, name=display_name)
+  project = "KLUE-test"  # W&B Projects
+  entity_name = "level2-nlp-09"
+  display_name = "RL_ST_NO_aug-punc"  # Model_name displayed in W&B Projects
+  wandb.init(project=project, entity=entity_name, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
-    save_total_limit=5,              # number of total save model.
+    save_total_limit=8,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
+    num_train_epochs=5,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=16,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation

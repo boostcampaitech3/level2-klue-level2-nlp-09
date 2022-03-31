@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
+from data_aug import *
 
 
 class RE_Dataset(torch.utils.data.Dataset):
@@ -35,7 +36,7 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
+def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
@@ -52,6 +53,21 @@ def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
+
+def load_aug_data(dataset_dir, aug_dir, train=True, filter=False, marking_mode="normal"):
+    """ augmentation 적용된 csv파일 로드 """
+    pd_dataset = pd.read_csv(dataset_dir)
+
+    # train_test split
+    if train:
+        pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
+        # train_dataset = preprocessing_dataset(pd_train, filter, marking_mode)  # 기존
+        train_dataset = pd.read_csv(aug_dir)  # data augmentation 적용된 csv파일
+        eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
+        return train_dataset, eval_dataset
+    else:
+        test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
+        return test_dataset
 
 ## sentence 전처리
 def sentence_filter(sentence, filter=False):
