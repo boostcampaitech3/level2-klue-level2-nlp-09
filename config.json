@@ -3,9 +3,9 @@
                  "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
                  "tokenize_mode: ['default', 'multi', 'entity', 'typed_entity', typed_entity_punc]"],
                  
-    "test_name": "test_entity",
+    "test_name": "RL_ST_NO_typed_entity_punc_input",
     "model_name" : "klue/roberta-large",                 
     "sentence_filter" : false, 
     "marking_mode" : "normal",
-    "tokenize_mode": "default"
+    "tokenize_mode": "typed_entity_punc"
 }

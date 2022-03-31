@@ -13,7 +13,7 @@ def save_record(config, training_args):
     "load_model":  config['model_name'],
     "filter":  config['sentence_filter'],
     "marking_mode":  config['marking_mode'],
-    "tokenized":  config['tokenized_function'],
+    "tokenized":  config['tokenize_mode'],
     "epoch": args_dict['num_train_epochs'], 
     "learning_rate": args_dict['learning_rate'], 
     "train_batch_size": args_dict['per_device_train_batch_size'],

@@ -113,7 +113,6 @@ def tokenized_dataset(dataset, tokenizer, type):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
   for e01, e02, t01, t02 in zip(dataset['subject_entity'], dataset['object_entity'], dataset['subject_type'], dataset['object_type']):
-    print(e01)
     if type == "multi":
       temp = f"{e01}[SEP]{e02} 어떤 관계일까?"
     elif type =="entity":
