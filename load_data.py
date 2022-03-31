@@ -124,7 +124,6 @@ def tokenized_dataset(dataset, tokenizer, type):
       temp = f"@ * {t01} * {e01} @ # ^ {t02} ^ {e02} # 어떤 관계일까?" 
     else:
       temp = e01 + '[SEP]' + e02
-    print(temp)
     concat_entity.append(temp)
 
   tokenized_sentences = tokenizer(
