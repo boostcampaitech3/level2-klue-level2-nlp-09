@@ -79,21 +79,19 @@ def label_to_num(label):
 
 def train():
   # load_parameter: tokenizer, sentence preprocessing
-  tokenize_function_list = {"default": tokenized_dataset}
   with open("config.json","r") as js:
     config = json.load(js)
     load_model = config['model_name']        # model
     filter = config['sentence_filter']       # sentence_filter
     marking_mode = config['marking_mode']    # marking_mode
-    tokenized = config['tokenized_function'] # tokenize_function
+    tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
-    
-  tokenize_function = tokenize_function_list[tokenized]
+  
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   print("#################################################################################################################### \n",
-        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_mode}\n",
         "#################################################################################################################### \n")
 
   # load dataset
@@ -109,8 +107,8 @@ def train():
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
   # tokenizing dataset
-  tokenized_train = tokenize_function(train_dataset, tokenizer)
-  tokenized_dev = tokenize_function(dev_dataset, tokenizer)
+  tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
+  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
