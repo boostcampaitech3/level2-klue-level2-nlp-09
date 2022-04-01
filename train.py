@@ -5,9 +5,22 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from load_data import *
 import wandb
+import json
+import random
+from test_recording import *
+
+def seed_everything(seed: int = 42):
+    """Random seed(Reproducibility)"""
+    random.seed(seed)                              
+    np.random.seed(seed)                           
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.manual_seed(seed)                        
+    torch.cuda.manual_seed(seed)  # type: ignore    
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = False  # type: ignore
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -62,29 +75,44 @@ def label_to_num(label):
     dict_label_to_num = pickle.load(f)
   for v in label:
     num_label.append(dict_label_to_num[v])
-  
   return num_label
 
 def train():
-  # load model and tokenizer
-  # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  # load_parameter: tokenizer, sentence preprocessing
+  with open("config.json","r") as js:
+    config = json.load(js)
+    load_model = config['model_name']        # model
+    filter = config['sentence_filter']       # sentence_filter
+    marking_mode = config['marking_mode']    # marking_mode
+    tokenize_mode = config['tokenize_mode'] # tokenize_function
+    wandb_name = config['test_name']
+  
+  # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
+  MODEL_NAME = load_model
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+  print("#################################################################################################################### \n",
+        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_mode}\n",
+        "#################################################################################################################### \n")
 
   # load dataset
-  train_dataset = load_data("../dataset/train/train.csv")
-  # dev_dataset = load_data("../dataset/train/dev.csv") # validation용 데이터는 따로 만드셔야 합니다.
-
+  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
   train_label = label_to_num(train_dataset['label'].values)
-  # dev_label = label_to_num(dev_dataset['label'].values)
-
+  dev_label = label_to_num(dev_dataset['label'].values)
+  
+  # add vocab (special tokens)
+  with open("marking_mode_tokens.json","r") as json_file:
+    mode2special_token = json.load(json_file)
+  add_token_num = 0
+  if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
+    add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
+  
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  # tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+  tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
+  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
-  # RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
+  RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
 
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -94,12 +122,14 @@ def train():
   model_config.num_labels = 30
 
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  #resize models vocab_size(add add_token_num) 
+  model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
   print(model.config)
   model.parameters
   model.to(device)
   
   project = "KLUE-test" # W&B Projects
-  display_name = "wandb_test" # Model_name displayed in W&B Projects
+  display_name = wandb_name # Model_name displayed in W&B Projects
   wandb.init(project=project, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
@@ -108,7 +138,7 @@ def train():
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
+    num_train_epochs=5,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=16,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
@@ -122,14 +152,20 @@ def train():
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
+    metric_for_best_model = 'micro f1 score',
     report_to="wandb",  # enable logging to W&B
+    fp16 = True,        # whether to use 16bit (mixed) precision training
+    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
+  # save test result 
+  save_record(config, training_args)
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
-    eval_dataset=RE_train_dataset,             # evaluation dataset
-    compute_metrics=compute_metrics         # define metrics function
+    eval_dataset=RE_dev_dataset,             # evaluation dataset
+    compute_metrics=compute_metrics,         # define metrics function
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
   )
 
   # train model
@@ -139,4 +175,5 @@ def main():
   train()
 
 if __name__ == '__main__':
+  seed_everything(42)
   main()
