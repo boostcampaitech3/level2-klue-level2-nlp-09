@@ -88,15 +88,17 @@ def get_num_iter(train_dataset, label):
     return num_iter
     
 
-def aeda(train_dataset):
+def aeda(dataset):
     """ 문장부호 추가 증강 수행 후 csv파일로 저장 """
     total_id = []
     total_sent = []
     total_sub = []
     total_obj = []
     total_label = []
+    total_sub_type = []
+    total_obj_type = []
 
-    num_dict, quarter1, median, quarter3 = count_label(train_dataset)
+    num_dict, quarter1, median, quarter3 = count_label(dataset)
     # print('train dataset 개수:', len(train_dataset))
     # # print('eval dataset 개수:', len(eval_dataset))
     # print('class 개수: ', len(num_dict))
@@ -105,15 +107,17 @@ def aeda(train_dataset):
     # print('median:', median)
     # print('quarter3:', quarter3)
 
-    for i in range(len(train_dataset)):
-        label = train_dataset['label'].iloc[i]
-        num_iter = get_num_iter(train_dataset, label)
+    for i in range(len(dataset)):
+        label = dataset['label'].iloc[i]
+        num_iter = get_num_iter(dataset, label)
                                 
-        new_id = [train_dataset['id'].iloc[i]] * (num_iter+1)
-        new_sentence = iter_punc(num_iter, list(train_dataset['sentence'])[i], PUNC_RATIO)
-        new_sub = [train_dataset['subject_entity'].iloc[i]] * (num_iter+1)
-        new_obj = [train_dataset['object_entity'].iloc[i]] * (num_iter+1)
+        new_id = [dataset['id'].iloc[i]] * (num_iter+1)
+        new_sentence = iter_punc(num_iter, list(dataset['sentence'])[i], PUNC_RATIO)
+        new_sub = [dataset['subject_entity'].iloc[i]] * (num_iter+1)
+        new_obj = [dataset['object_entity'].iloc[i]] * (num_iter+1)
         new_label = [label] * (num_iter+1)
+        new_sub = [dataset['subject_type'].iloc[i]] * (num_iter+1)
+        new_obj = [dataset['object_type'].iloc[i]] * (num_iter+1)
         
         total_id += new_id
         total_sent += new_sentence
@@ -121,12 +125,12 @@ def aeda(train_dataset):
         total_obj += new_obj
         total_label += new_label
 
-    aug_df = pd.DataFrame()
-    aug_df['id'] = total_id
-    aug_df['sentence'] = total_sent
-    aug_df['subject_entity'] = total_sub
-    aug_df['object_entity'] = total_obj
-    aug_df['label'] = total_label
+        total_sub_type += new_sub
+        total_obj_type += new_obj
+
+    aug_df = pd.DataFrame({'id':total_id, 'sentence':total_sent, 'subject_entity':total_sub,
+                            'object_entity':total_obj, 'label':total_label, 
+                            'subject_type':total_sub_type,'object_type':total_obj_type,})
 
     return aug_df
         

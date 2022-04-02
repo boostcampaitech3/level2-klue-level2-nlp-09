@@ -45,7 +45,7 @@ def preprocessing_swap(dataset, filter):
         obj_s.append(obj['start_idx'])
         obj_e.append(obj['end_idx'])
     out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'], 
-                                'subject_entity':dataset['subject_entity'],'object_entity':dataset['object_entity'], 'label':dataset['label'], 
+                                'subject_entity':dataset['subject_entity'],'object_entity':dataset['object_entity'], 'label':dataset['label'],
                                 'sub':subs, 'obj':objs, 'sub_s':sub_s, 'sub_e':sub_e, 'obj_s':obj_s, 'obj_e':obj_e})
     return out_dataset
 
@@ -86,7 +86,6 @@ def main(dataset_dir):
     print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_df))
     print('원본+swap 데이터 개수: ', len(swap_dataset))
     
-    # swap_df.to_csv("only_swap.csv", index=False, encoding="utf-8-sig")
     swap_dataset.to_csv("swap_and_original.csv", index=False, encoding="utf-8-sig")
 
 

@@ -26,6 +26,8 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   """ 처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
   subject_entity = []
   object_entity = []
+  subject_type = []
+  object_type = []
   sentences = []
   filtered_sentence = sentence_filter(dataset['sentence'], filter) # sentence filter
   for sub,obj,sentence in zip(dataset['subject_entity'], dataset['object_entity'], filtered_sentence):
@@ -33,8 +35,11 @@ def preprocessing_dataset(dataset, filter, marking_mode):
     obj = eval(obj)
     subject_entity.append(sub['word'])
     object_entity.append(obj['word'])
+    subject_type.append(sub['type'])
+    object_type.append(obj['type'])
     sentences.append(sentence_marking(sentence, sub, obj, marking_mode)) # sentence_marking
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,
+  'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
@@ -55,7 +60,7 @@ def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
 
-def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=False):
+def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=True):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
@@ -81,17 +86,17 @@ def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", 
     if save:
       aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
 
-    # print('원본 데이터 개수: ', len(train_dataset))
-    # print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
-    # print('원본+swap 데이터 개수: ', len(swap_dataset))
+    print('원본 데이터 개수: ', len(train_dataset))
+    print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
+    print('원본+swap 데이터 개수: ', len(swap_dataset))
 
-    # print("현재 사용중인 marking_mode: ", marking_mode)
-    # print("aeda 이전 데이터 개수: ", len(swap_dataset))
-    # print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
-    # print("aug 이후 데이터 개수: ", len(aug_dataset))
-    # print('@@@@@@@@@@@@@@@@ Done @@@@@@@@@@@@@@@@')
+    print("현재 사용중인 marking_mode: ", marking_mode)
+    print("aeda 이전 데이터 개수: ", len(swap_dataset))
+    print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
+    print("aug 이후 데이터 개수: ", len(aug_dataset))
+    print('############################  Done  ############################')
 
-    return train_dataset, eval_dataset
+    return aug_dataset, eval_dataset
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
@@ -148,20 +153,29 @@ def stratified_choice_train_test_split(X, test_size=0.2, random_state=42):
   return X_train, X_test
 
 ### 데이터셋 토크나이즈
-def tokenized_dataset(dataset, tokenizer):
+def tokenized_dataset(dataset, tokenizer, type):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
-  for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
-    temp = ''
-    temp = e01 + '[SEP]' + e02
+  for e01, e02, t01, t02 in zip(dataset['subject_entity'], dataset['object_entity'], dataset['subject_type'], dataset['object_type']):
+    if type == "multi":
+      temp = f"{e01}[SEP]{e02} 어떤 관계일까?"
+    elif type =="entity":
+      temp = f"[sub]{e01}[/sub] [obj]{e02}[/obj] 어떤 관계일까?"
+    elif type == "typed_entity":
+      temp = f"<S:{t01}> {e01} </S:{t01}> <O:{t02}> {e02} </O:{t02}> 어떤 관계일까?"
+    elif type == "typed_entity_punc":
+      temp = f"@ * {t01} * {e01} @ # ^ {t02} ^ {e02} # 어떤 관계일까?" 
+    else:
+      temp = e01 + '[SEP]' + e02
     concat_entity.append(temp)
+
   tokenized_sentences = tokenizer(
-      concat_entity,
+      concat_entity, # for single_sentence
       list(dataset['sentence']),
       return_tensors="pt",
       padding=True,
       truncation=True,
-      max_length=256,
+      max_length=512, # 512로 변경 가능
       add_special_tokens=True,
       )
   return tokenized_sentences
