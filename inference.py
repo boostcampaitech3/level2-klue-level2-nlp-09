@@ -61,10 +61,9 @@ def main(args):
     load_model = config['model_name']        # model
     filter = config['sentence_filter']       # sentence_filter
     marking_mode = config['marking_mode']    # marking_mode
-    tokenized = config['tokenized_function'] # tokenize_function
-  tokenize_function = tokenize_function_list[tokenized]
+    tokenize_mode = config['tokenize_mode'] # tokenize_function
   print("####################################################################################################################\n",
-        f"Model_name: {load_model}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        f"Model_name: {load_model}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_mode}\n",
         "####################################################################################################################\n")
 
   # load tokenizer
@@ -90,7 +89,7 @@ def main(args):
   test_id = test_dataset['id'] 
   test_label = list(map(int,test_dataset['label'].values))
   # tokenizing dataset
-  tokenized_test = tokenize_function(test_dataset, tokenizer)
+  tokenized_test = tokenized_dataset(test_dataset, tokenizer, tokenize_mode)
 
   Re_test_dataset = RE_Dataset(tokenized_test ,test_label)
 

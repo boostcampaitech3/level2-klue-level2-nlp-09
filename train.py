@@ -79,21 +79,19 @@ def label_to_num(label):
 
 def train():
   # load_parameter: tokenizer, sentence preprocessing
-  tokenize_function_list = {"default": tokenized_dataset}
   with open("config.json","r") as js:
     config = json.load(js)
     load_model = config['model_name']        # model
     filter = config['sentence_filter']       # sentence_filter
     marking_mode = config['marking_mode']    # marking_mode
-    tokenized = config['tokenized_function'] # tokenize_function
+    tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
-    
-  tokenize_function = tokenize_function_list[tokenized]
+  
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   print("#################################################################################################################### \n",
-        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_function}\n",
+        f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_mode}\n",
         "#################################################################################################################### \n")
 
   # load dataset
@@ -111,8 +109,9 @@ def train():
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
   # tokenizing dataset
-  tokenized_train = tokenize_function(train_dataset, tokenizer)
-  tokenized_dev = tokenize_function(dev_dataset, tokenizer)
+  tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
+  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+  # print(tokenizer.decode(tokenized_train['input_ids'][0]))
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -128,12 +127,13 @@ def train():
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   #resize models vocab_size(add add_token_num) 
   model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
-  print(model.config)
+  # print(model.config)
   model.parameters
   model.to(device)
   
   project = "KLUE-test"  # W&B Projects
   entity_name = "level2-nlp-09"
+  display_name = "RL_ST_TP_TPSent_SOTA-aug"
   # display_name = "RL_ST_NO_balanced-aug-all"  # Model_name displayed in W&B Projects
   # display_name = "RL_ST_NO_augment-test"
   # display_name = "RL_ST_NO_aug-punc-okt-small"  # Model_name displayed in W&B Projects
@@ -145,10 +145,13 @@ def train():
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=10,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
+    num_train_epochs=5,              # total number of training epochs
+    learning_rate=3e-5,               # learning_rate
+    per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
+    # added max_length in load_data.py
+    warmup_ratio = 0.1,  # defalut 0
+    adam_epsilon = 1e-6, # default 1e-8
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
