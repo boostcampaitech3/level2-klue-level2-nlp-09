@@ -4,6 +4,8 @@ import pandas as pd
 import torch
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
+from swap_entity import *
+from aeda import *
 
 
 class RE_Dataset(torch.utils.data.Dataset):
@@ -40,7 +42,7 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
+def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
@@ -57,6 +59,48 @@ def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
+
+def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=False):
+  """ 
+  csv 파일을 경로에 맡게 불러 옵니다. 
+  train_test_split: choice_train_test_split, stratified_choice_train_test_split 
+  sentence_filter: True, False
+  marking_mode: normal, entity, typed_entity, typed_entity_punc
+  """
+  pd_dataset = pd.read_csv(dataset_dir)
+  if train:
+    ### 1) 데이터 로드
+    pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
+    train_dataset = preprocessing_swap(pd_train, False)
+    eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
+
+    ### 2) swap entity
+    swap_dataset = apply_swap(train_dataset)    
+
+    ### 3) marking mode 적용
+    swap_dataset = preprocessing_dataset(swap_dataset, False, marking_mode=marking_mode)  # sentence_marking
+
+    ### 4) aeda 수행
+    aug_dataset = aeda(swap_dataset)
+
+    if save:
+      aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
+
+    # print('원본 데이터 개수: ', len(train_dataset))
+    # print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
+    # print('원본+swap 데이터 개수: ', len(swap_dataset))
+
+    # print("현재 사용중인 marking_mode: ", marking_mode)
+    # print("aeda 이전 데이터 개수: ", len(swap_dataset))
+    # print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
+    # print("aug 이후 데이터 개수: ", len(aug_dataset))
+    # print('@@@@@@@@@@@@@@@@ Done @@@@@@@@@@@@@@@@')
+
+    return train_dataset, eval_dataset
+  else:
+    test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
+    return test_dataset
+
 
 ## sentence 전처리
 def sentence_filter(sentence, filter=False):

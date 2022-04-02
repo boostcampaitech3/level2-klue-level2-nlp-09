@@ -95,7 +95,9 @@ def train():
         "#################################################################################################################### \n")
 
   # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
+  dataset_dir = "../dataset/train/train.csv"
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  # train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)  # augmentation 사용시
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -129,9 +131,13 @@ def train():
   model.parameters
   model.to(device)
   
-  project = "KLUE-test" # W&B Projects
-  display_name = wandb_name # Model_name displayed in W&B Projects
-  wandb.init(project=project, name=display_name)
+  project = "KLUE-test"  # W&B Projects
+  entity_name = "level2-nlp-09"
+  display_name = "RL_ST_TP_TPSent_SOTA-aug"
+  # display_name = "RL_ST_NO_balanced-aug-all"  # Model_name displayed in W&B Projects
+  # display_name = "RL_ST_NO_augment-test"
+  # display_name = "RL_ST_NO_aug-punc-okt-small"  # Model_name displayed in W&B Projects
+  wandb.init(project=project, entity=entity_name, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
@@ -169,7 +175,7 @@ def train():
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)] #EarlyStopping callbacks
   )
 
   # train model
