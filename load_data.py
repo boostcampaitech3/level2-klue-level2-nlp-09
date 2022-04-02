@@ -60,7 +60,7 @@ def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
 
-def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=False):
+def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=True):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
@@ -86,17 +86,17 @@ def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", 
     if save:
       aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
 
-    # print('원본 데이터 개수: ', len(train_dataset))
-    # print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
-    # print('원본+swap 데이터 개수: ', len(swap_dataset))
+    print('원본 데이터 개수: ', len(train_dataset))
+    print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
+    print('원본+swap 데이터 개수: ', len(swap_dataset))
 
-    # print("현재 사용중인 marking_mode: ", marking_mode)
-    # print("aeda 이전 데이터 개수: ", len(swap_dataset))
-    # print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
-    # print("aug 이후 데이터 개수: ", len(aug_dataset))
-    # print('@@@@@@@@@@@@@@@@ Done @@@@@@@@@@@@@@@@')
+    print("현재 사용중인 marking_mode: ", marking_mode)
+    print("aeda 이전 데이터 개수: ", len(swap_dataset))
+    print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
+    print("aug 이후 데이터 개수: ", len(aug_dataset))
+    print('############################  Done  ############################')
 
-    return train_dataset, eval_dataset
+    return aug_dataset, eval_dataset
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
