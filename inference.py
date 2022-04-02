@@ -76,11 +76,6 @@ def main(args):
   if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
     tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
-  ## load my model
-  MODEL_NAME = args.model_dir # model dir.
-  model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
-  model.parameters
-  model.to(device)
 
   ## load_test_datset
   test_dataset_dir = "../dataset/test/test_data.csv"
@@ -88,18 +83,51 @@ def main(args):
 
   test_id = test_dataset['id'] 
   test_label = list(map(int,test_dataset['label'].values))
+  
   # tokenizing dataset
   tokenized_test = tokenized_dataset(test_dataset, tokenizer, tokenize_mode)
-
   Re_test_dataset = RE_Dataset(tokenized_test ,test_label)
 
-  ## predict answer
-  pred_answer, output_prob = inference(model, Re_test_dataset, device) # model에서 class 추론
+
+  n_iter = 0
+  for idx in range(len(args.model_dir)):
+    n_iter += 1
+    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------------------')
+    print(f'inference #{n_iter}')
+    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------------------')
+
+    ## load my model
+    MODEL_NAME = args.model_dir[idx] # model dir.
+    model = AutoModelForSequenceClassification.from_pretrained(args.model_dir[idx])
+    model.parameters
+    model.to(device)
+
+    ## predict answer
+    pred_answer, output_prob = inference(model, Re_test_dataset, device) # model에서 class 추론
+    # print('pred_answer')
+    # print(pred_answer)
+    # print('output_prob')
+    # print(output_prob)
+    # print(output_prob.shape)
+
+    if idx == 0:
+      kfold_pred = np.array(output_prob)/len(args.model_dir)
+    else:
+      kfold_pred += np.array(output_prob)/len(args.model_dir)
+  
+  pred_answer = []
+  for logit in kfold_pred:
+    result = np.argmax(logit, axis=-1)
+    pred_answer.append(result)
+    print(result, end = ' | ')
+
   pred_answer = num_to_label(pred_answer) # 숫자로 된 class를 원래 문자열 라벨로 변환.
   
   ## make csv file with predicted answer
   ################### 아래 directory와 columns의 형태는 지켜주시기 바랍니다.######################################
-  output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':output_prob,})
+  output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':kfold_pred.tolist()})
   output.to_csv('./prediction/submission.csv', index=False) 
   ###################  최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장. ##############################################
   print('---- Finish! ----')
@@ -108,7 +136,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
   # model dir
-  parser.add_argument('--model_dir', type=str, default="./best_model")
+  parser.add_argument('--model_dir', type=str, default=["./last_model_kfold_#1","./last_model_kfold_#2","./last_model_kfold_#3","./last_model_kfold_#4","./last_model_kfold_#5" ])
   args = parser.parse_args()
   print(args)
   main(args)

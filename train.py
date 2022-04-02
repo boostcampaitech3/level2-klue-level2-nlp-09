@@ -11,6 +11,8 @@ import wandb
 import json
 import random
 from test_recording import *
+from sklearn.model_selection import KFold, StratifiedKFold
+from custom_trainer import MyTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -93,11 +95,7 @@ def train():
   print("#################################################################################################################### \n",
         f"Model_name: {MODEL_NAME}, Filter: {filter}, Marking_mode: {marking_mode}, Tokenized_function: {tokenize_mode}\n",
         "#################################################################################################################### \n")
-
-  # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
-  train_label = label_to_num(train_dataset['label'].values)
-  dev_label = label_to_num(dev_dataset['label'].values)
+ 
   
   # add vocab (special tokens)
   with open("marking_mode_tokens.json","r") as json_file:
@@ -106,17 +104,9 @@ def train():
   if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
     add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
   
-  # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
-  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
-
-  # make dataset for pytorch.
-  RE_train_dataset = RE_Dataset(tokenized_train, train_label)
-  RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
-
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
   print(device)
+
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
@@ -131,46 +121,126 @@ def train():
   project = "KLUE-test" # W&B Projects
   display_name = wandb_name # Model_name displayed in W&B Projects
   wandb.init(project=project, name=display_name)
-  
-  # 사용한 option 외에도 다양한 option들이 있습니다.
-  # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
-  training_args = TrainingArguments(
-    output_dir='./results',          # output directory
-    save_total_limit=5,              # number of total save model.
-    save_steps=500,                 # model saving step.
-    num_train_epochs=5,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
-    per_device_eval_batch_size=16,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.01,               # strength of weight decay
-    logging_dir='./logs',            # directory for storing logs
-    logging_steps=100,              # log saving step.
-    evaluation_strategy='steps', # evaluation strategy to adopt during training
-                                # `no`: No evaluation during training.
-                                # `steps`: Evaluate every `eval_steps`.
-                                # `epoch`: Evaluate every end of epoch.
-    eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True,
-    metric_for_best_model = 'micro f1 score',
-    report_to="wandb",  # enable logging to W&B
-    fp16 = True,        # whether to use 16bit (mixed) precision training
-    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
-  )
-  # save test result 
-  save_record(config, training_args)
-  trainer = Trainer(
-    model=model,                         # the instantiated 🤗 Transformers model to be trained
-    args=training_args,                  # training arguments, defined above
-    train_dataset=RE_train_dataset,         # training dataset
-    eval_dataset=RE_dev_dataset,             # evaluation dataset
-    compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
-  )
 
-  # train model
-  trainer.train()
-  model.save_pretrained('./best_model')
+
+
+
+
+  
+
+  # load dataset
+  dataset= load_data("../dataset/train/train.csv", train=False, filter=filter, marking_mode=marking_mode)
+  data_label = label_to_num(dataset['label'].values)
+
+  # create kfold entity
+  kfold = StratifiedKFold(n_splits=5)
+
+  # split train and validation index for each kfold iteration
+  train_labels, dev_labels = list(), list()
+  for train_idx, dev_idx in kfold.split(dataset, dataset['label']):
+    train_labels.append(train_idx)
+    dev_labels.append(dev_idx)
+    # print("학습 레이블 분포")
+    # print(train_label.value_counts())
+    # print("검증 레이블 분포")
+    # print(test_label.value_counts())
+    # print("")
+
+  # start training for each kfold iteration
+  n_iter = 0
+  for idx in range(5):
+    # make iteration
+    n_iter += 1
+    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------------------')
+    print(f'iteration #{n_iter}')
+    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------------------')
+    
+
+    # split dataset
+    train_dataset = dataset.iloc[train_labels[idx]]
+    dev_dataset = dataset.iloc[dev_labels[idx]]
+
+
+
+    # print( train_labels[idx].tolist().extend(dev_labels[idx].tolist()))
+
+    # # check whether there are overlaps betwwen train index and val index
+    # if len(train_labels[idx].tolist().extend(dev_labels[idx].tolist()))==(len(dev_labels[idx].tolist())+len(train_labels[idx].tolist())) :
+    #   print("train_labels and dev_labels checking")
+    #   print("there is no overlap between train data and val data ")
+    #   print('------------------------------------------------------------------------------')
+    #   print('------------------------------------------------------------------------------')
+
+    # tokenizing dataset
+    tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
+    tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+
+    # make label for dataset
+    train_label = label_to_num(train_dataset['label'].values)
+    dev_label = label_to_num(dev_dataset['label'].values)
+
+    # make dataset for pytorch.
+    RE_train_dataset = RE_Dataset(tokenized_train, train_label)
+    RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
+
+    # print(RE_dataset)
+    # print(RE_dataset)
+
+    # 사용한 option 외에도 다양한 option들이 있습니다.
+    # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
+    training_args = TrainingArguments(
+      output_dir='./results',          # output directory
+      save_total_limit=5,              # number of total save model.
+      save_steps=500,                 # model saving step.
+      num_train_epochs=5,              # total number of training epochs
+      learning_rate=3e-5,               # learning_rate
+      per_device_train_batch_size=32,  # batch size per device during training
+      per_device_eval_batch_size=16,   # batch size for evaluation
+      warmup_steps=500,                # number of warmup steps for learning rate scheduler
+      warmup_ratio=0.1,                # default 0
+      adam_epsilon=1e-6,               # default 1e-6
+      weight_decay=0.01,               # strength of weight decay
+      logging_dir='./logs',            # directory for storing logs
+      logging_steps=100,              # log saving step.
+      evaluation_strategy='steps', # evaluation strategy to adopt during training
+                                  # `no`: No evaluation during training.
+                                  # `steps`: Evaluate every `eval_steps`.
+                                  # `epoch`: Evaluate every end of epoch.
+      eval_steps = 500,            # evaluation step. #default 500
+      load_best_model_at_end = True,
+      metric_for_best_model = 'micro f1 score',
+      report_to="wandb",  # enable logging to W&B
+      fp16 = True,        # whether to use 16bit (mixed) precision training
+      fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
+    )
+    # save test result 
+    save_record(config, training_args)
+    # trainer = Trainer(
+    #   model=model,                         # the instantiated 🤗 Transformers model to be trained
+    #   args=training_args,                  # training arguments, defined above
+    #   train_dataset=RE_train_dataset,         # training dataset
+    #   eval_dataset=RE_train_dataset,             # evaluation dataset
+    #   compute_metrics=compute_metrics,         # define metrics function
+    #   # callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    # )
+
+    trainer = MyTrainer(
+      model=model,                         # the instantiated 🤗 Transformers model to be trained
+      args=training_args,                  # training arguments, defined above
+      train_dataset=RE_train_dataset,         # training dataset
+      eval_dataset=RE_train_dataset,             # evaluation dataset
+      compute_metrics=compute_metrics,        # define metrics function
+      original_dataset = train_dataset,
+      device = device,
+      loss_name = 'focal'            # define loss for training ['Default'(labelsmoother), 'F1', 'Focal', 'CE','WeightedCE', 'RootWeightedCE' ]
+    )
+
+    # train model
+    trainer.train()
+    model.save_pretrained(f'./last_model_kfold_#{n_iter}')
+
 def main():
   train()
 
