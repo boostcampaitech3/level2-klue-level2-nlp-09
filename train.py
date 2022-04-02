@@ -129,7 +129,7 @@ def train():
   model.parameters
   model.to(device)
   
-  project = "KLUE-test" # W&B Projects
+  project = "KLUE" # W&B Projects
   display_name = wandb_name # Model_name displayed in W&B Projects
   wandb.init(project=project, name=display_name)
   
@@ -139,9 +139,9 @@ def train():
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=5,              # total number of training epochs
-    learning_rate=3e-5,               # learning_rate
-    per_device_train_batch_size=32,  # batch size per device during training
+    # num_train_epochs=5,              # total number of training epochs
+    # learning_rate=3e-5,               # learning_rate
+    # per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
     # added max_length in load_data.py
     warmup_ratio = 0.1,  # defalut 0
