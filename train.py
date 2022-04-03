@@ -96,8 +96,8 @@ def train():
 
   # load dataset
   dataset_dir = "../dataset/train/train.csv"
-  # train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
-  train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)  # augmentation 사용시
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  # train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)  # augmentation 사용시
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -134,7 +134,7 @@ def train():
   project = "KLUE-test"  # W&B Projects
   entity_name = "level2-nlp-09"
   # display_name = "RL_ST_TP_TPSent_SOTA-aug-fixed"
-  display_name = "BB_ST_NO-basic-aug"
+  display_name = "BB_ST_NO-basic"
   # display_name = "RL_ST_NO_balanced-aug-all"  # Model_name displayed in W&B Projects
   # display_name = "RL_ST_NO_augment-test"
   # display_name = "RL_ST_NO_aug-punc-okt-small"  # Model_name displayed in W&B Projects

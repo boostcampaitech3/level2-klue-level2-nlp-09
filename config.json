@@ -3,7 +3,7 @@
                  "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
                  "tokenize_mode: ['default', 'multi', 'entity', 'typed_entity', typed_entity_punc]"],
                  
-    "test_name": "BB_ST_NO-basic-aug",
+    "test_name": "BB_ST_NO-basic",
     "model_name" : "klue/bert-base",                 
     "sentence_filter" : false, 
     "marking_mode" : "normal",
