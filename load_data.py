@@ -24,6 +24,8 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   """ 처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
   subject_entity = []
   object_entity = []
+  subject_type = []
+  object_type = []
   sentences = []
   filtered_sentence = sentence_filter(dataset['sentence'], filter) # sentence filter
   for sub,obj,sentence in zip(dataset['subject_entity'], dataset['object_entity'], filtered_sentence):
@@ -31,8 +33,11 @@ def preprocessing_dataset(dataset, filter, marking_mode):
     obj = eval(obj)
     subject_entity.append(sub['word'])
     object_entity.append(obj['word'])
+    subject_type.append(sub['type'])
+    object_type.append(obj['type'])
     sentences.append(sentence_marking(sentence, sub, obj, marking_mode)) # sentence_marking
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentences, 'subject_entity':subject_entity,'object_entity':object_entity,
+  'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
@@ -104,13 +109,22 @@ def stratified_choice_train_test_split(X, test_size=0.2, random_state=42):
   return X_train, X_test
 
 ### 데이터셋 토크나이즈
-def tokenized_dataset(dataset, tokenizer):
+def tokenized_dataset(dataset, tokenizer, type):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
-  for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
-    temp = ''
-    temp = e01 + '[SEP]' + e02
+  for e01, e02, t01, t02 in zip(dataset['subject_entity'], dataset['object_entity'], dataset['subject_type'], dataset['object_type']):
+    if type == "multi":
+      temp = f"{e01}[SEP]{e02} 어떤 관계일까?"
+    elif type =="entity":
+      temp = f"[sub]{e01}[/sub] [obj]{e02}[/obj] 어떤 관계일까?"
+    elif type == "typed_entity":
+      temp = f"<S:{t01}> {e01} </S:{t01}> <O:{t02}> {e02} </O:{t02}> 어떤 관계일까?"
+    elif type == "typed_entity_punc":
+      temp = f"@ * {t01} * {e01} @ # ^ {t02} ^ {e02} # 어떤 관계일까?" 
+    else:
+      temp = e01 + '[SEP]' + e02
     concat_entity.append(temp)
+
   tokenized_sentences = tokenizer(
       concat_entity,
       list(dataset['sentence']),
