@@ -133,7 +133,8 @@ def train():
   
   project = "KLUE-test"  # W&B Projects
   entity_name = "level2-nlp-09"
-  display_name = "RL_ST_TP_TPSent_SOTA-aug-fixed"
+  # display_name = "RL_ST_TP_TPSent_SOTA-aug-fixed"
+  display_name = "BB_ST_NO-basic-aug"
   # display_name = "RL_ST_NO_balanced-aug-all"  # Model_name displayed in W&B Projects
   # display_name = "RL_ST_NO_augment-test"
   # display_name = "RL_ST_NO_aug-punc-okt-small"  # Model_name displayed in W&B Projects
