@@ -116,17 +116,16 @@ def aeda(dataset):
         new_sub = [dataset['subject_entity'].iloc[i]] * (num_iter+1)
         new_obj = [dataset['object_entity'].iloc[i]] * (num_iter+1)
         new_label = [label] * (num_iter+1)
-        new_sub = [dataset['subject_type'].iloc[i]] * (num_iter+1)
-        new_obj = [dataset['object_type'].iloc[i]] * (num_iter+1)
+        new_sub_type = [dataset['subject_type'].iloc[i]] * (num_iter+1)
+        new_obj_type = [dataset['object_type'].iloc[i]] * (num_iter+1)
         
         total_id += new_id
         total_sent += new_sentence
         total_sub += new_sub
         total_obj += new_obj
         total_label += new_label
-
-        total_sub_type += new_sub
-        total_obj_type += new_obj
+        total_sub_type += new_sub_type
+        total_obj_type += new_obj_type
 
     aug_df = pd.DataFrame({'id':total_id, 'sentence':total_sent, 'subject_entity':total_sub,
                             'object_entity':total_obj, 'label':total_label, 

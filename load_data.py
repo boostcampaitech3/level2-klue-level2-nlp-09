@@ -60,7 +60,7 @@ def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
 
-def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=True):
+def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=False):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
@@ -84,7 +84,9 @@ def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", 
     aug_dataset = aeda(swap_dataset)
 
     if save:
-      aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
+      # aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
+      save_dir = "final_aug_dataset_" + marking_mode + ".csv"
+      aug_dataset.to_csv(save_dir, index=False, encoding="utf-8-sig")
 
     print('원본 데이터 개수: ', len(train_dataset))
     print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
@@ -181,5 +183,7 @@ def tokenized_dataset(dataset, tokenizer, type):
   return tokenized_sentences
 
 if __name__ == '__main__':
-  load_data("../dataset/train/train.csv", train=True, filter=False ,marking_mode="typed_entity_punc")
+  # load_data("../dataset/train/train.csv", train=True, filter=False ,marking_mode="typed_entity_punc")
+  dataset_dir = "../dataset/train/train.csv"
+  load_aug_data(dataset_dir, train=True, filter=False, marking_mode="typed_entity_punc")
   # sen = sentence_filter(pd.Series(["◆▶ ♧'문찬국'(文讚國, 1995~) ☆ §", "애플은 옳고 그름에 대한 감각이 없으며 진실을 외면했다라며 비난했다."]), True)
