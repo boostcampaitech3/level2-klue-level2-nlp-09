@@ -131,6 +131,11 @@ def aeda(dataset):
                             'object_entity':total_obj, 'label':total_label, 
                             'subject_type':total_sub_type,'object_type':total_obj_type,})
 
+    # # undersampling
+    # no_relation_df = aug_df[aug_df['label' == 'no_relation']]
+
+    # res_df = aug_df[aug_df['label' != 'no_relation']]
+
     return aug_df
         
 
