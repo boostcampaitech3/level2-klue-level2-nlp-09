@@ -13,12 +13,15 @@ def save_record(config, training_args):
     "load_model":  config['model_name'],
     "filter":  config['sentence_filter'],
     "marking_mode":  config['marking_mode'],
-    "tokenized":  config['tokenize_mode'],
-    "epoch": args_dict['num_train_epochs'], 
-    "learning_rate": args_dict['learning_rate'], 
+    "tokenized":  config['tokenize_mode'], 
     "train_batch_size": args_dict['per_device_train_batch_size'],
     "fp16": args_dict['fp16'],
-    "fp16_opt_level": args_dict['fp16_opt_level']
+    "fp16_opt_level": args_dict['fp16_opt_level'],
+    "epoch": args_dict['num_train_epochs'],
+    "warmup_ratio": args_dict['warmup_ratio'],
+    "adam_epsilon": args_dict['adam_epsilon'],
+    "learning_rate": args_dict['learning_rate'],
+    "max_seq_length": 512
     }
 
     # path setting
