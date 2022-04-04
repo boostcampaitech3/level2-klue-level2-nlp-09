@@ -42,7 +42,25 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, train=True, filter=False, marking_mode="normal", aug_type=False, save=False):
+def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
+  """ 
+  csv 파일을 경로에 맡게 불러 옵니다. 
+  train_test_split: choice_train_test_split, stratified_choice_train_test_split 
+  sentence_filter: True, False
+  marking_mode: normal, entity, typed_entity, typed_entity_punc
+  """
+  pd_dataset = pd.read_csv(dataset_dir)
+  # train_test split
+  if train:
+    pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
+    train_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
+    eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
+    return train_dataset, eval_dataset
+  else:
+    test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
+    return test_dataset
+
+def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", aug_type=False, save=False):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
