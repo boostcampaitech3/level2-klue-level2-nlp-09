@@ -22,6 +22,7 @@ import wandb
 import json
 import random
 from test_recording import *
+from custom_trainer import MyTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -97,6 +98,7 @@ def train():
     marking_mode = config['marking_mode']    # marking_mode
     tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
+    loss_name = config['loss_name']  #loss_name
   
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
@@ -106,7 +108,9 @@ def train():
         "#################################################################################################################### \n")
 
   # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
+  dataset_dir = "../dataset/train/train.csv"
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  # train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode, aug_type="swap", save=True)  # augmentation 사용시
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -120,6 +124,7 @@ def train():
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
   tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+  # print(tokenizer.decode(tokenized_train['input_ids'][0]))
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -135,13 +140,14 @@ def train():
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   #resize models vocab_size(add add_token_num) 
   model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
-  print(model.config)
+  # print(model.config)
   model.parameters
   model.to(device)
   
-  project = "KLUE-test" # W&B Projects
-  display_name = wandb_name # Model_name displayed in W&B Projects
-  wandb.init(project=project, name=display_name)
+  project = "KLUE-test"  # W&B Projects
+  entity_name = "level2-nlp-09"
+  display_name = "wandb-test"  # Model_name displayed in W&B Projects
+  wandb.init(project=project, entity=entity_name, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
@@ -150,9 +156,12 @@ def train():
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
     num_train_epochs=5,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
+    learning_rate=3e-5,               # learning_rate
+    per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
+    # added max_length in load_data.py
+    warmup_ratio = 0.1,  # defalut 0
+    adam_epsilon = 1e-6, # default 1e-8
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
@@ -170,13 +179,16 @@ def train():
   )
   # save test result 
   save_record(config, training_args)
-  trainer = Trainer(
+  trainer = MyTrainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
+    original_dataset = train_dataset,
+    device = device,
+    loss_name = loss_name                 # set loss for backpropagation
   )
 
   # train model

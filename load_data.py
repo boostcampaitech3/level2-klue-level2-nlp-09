@@ -4,6 +4,8 @@ import pandas as pd
 import torch
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
+from swap_entity import *
+from aeda import *
 
 
 class RE_Dataset(torch.utils.data.Dataset):
@@ -40,20 +42,51 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
+def load_data(dataset_dir, train=True, filter=False, marking_mode="normal", aug_type=False, save=False):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
   sentence_filter: True, False
   marking_mode: normal, entity, typed_entity, typed_entity_punc
+  aug_type: swap, aeda
   """
   pd_dataset = pd.read_csv(dataset_dir)
-  # train_test split
   if train:
+    ### augmentation 적용 안하는 경우
     pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
-    train_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
+    aug_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
     eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
-    return train_dataset, eval_dataset
+
+    if aug_type == "swap":
+      train_dataset = preprocessing_swap(pd_train, False)
+      aug_dataset = apply_swap(train_dataset)  # swap entity
+      aug_dataset = preprocessing_dataset(aug_dataset, False, marking_mode=marking_mode)  # sentence_marking
+      # aug_dataset = swap_dataset
+
+      print("현재 사용중인 marking_mode: ", marking_mode)
+      print('원본 데이터 개수: ', len(train_dataset))
+      print('swap으로 증강한 데이터 개수: ', len(aug_dataset) - len(train_dataset))
+      print('원본+swap 데이터 개수: ', len(aug_dataset))
+      print('############################  Done with Swap Entity Augmentation ############################')
+
+    elif aug_type == "aeda":
+      train_dataset = preprocessing_swap(pd_train, False)
+      swap_dataset = apply_swap(train_dataset)  # swap entity
+      swap_dataset = preprocessing_dataset(swap_dataset, False, marking_mode=marking_mode)  # sentence_marking
+      aug_dataset = aeda(swap_dataset)  # aeda
+
+      print("현재 사용중인 marking_mode: ", marking_mode)
+      print('원본 데이터 개수: ', len(train_dataset))
+      print('swap으로 증강한 데이터 개수: ', len(aug_dataset) - len(swap_dataset))
+      print('원본+swap 데이터 개수: ', len(swap_dataset))
+      print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(train_dataset))
+      print("aug 이후 데이터 개수: ", len(aug_dataset))
+      print('############################  Done with Swap Entity & AEDA Augmentation ############################')
+
+    if save:
+      save_dir = "final_aug_dataset_" + marking_mode + ".csv"
+      aug_dataset.to_csv(save_dir, index=False, encoding="utf-8-sig")
+    return aug_dataset, eval_dataset
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
@@ -126,16 +159,18 @@ def tokenized_dataset(dataset, tokenizer, type):
     concat_entity.append(temp)
 
   tokenized_sentences = tokenizer(
-      concat_entity,
+      concat_entity, # for single_sentence
       list(dataset['sentence']),
       return_tensors="pt",
       padding=True,
       truncation=True,
-      max_length=256,
+      max_length=512, # 512로 변경 가능
       add_special_tokens=True,
       )
   return tokenized_sentences
 
 if __name__ == '__main__':
-  load_data("../dataset/train/train.csv", train=True, filter=False ,marking_mode="typed_entity_punc")
+  # load_data("../dataset/train/train.csv", train=True, filter=False ,marking_mode="typed_entity_punc")
+  dataset_dir = "../dataset/train/train.csv"
+  load_aug_data(dataset_dir, train=True, filter=False, marking_mode="typed_entity_punc")
   # sen = sentence_filter(pd.Series(["◆▶ ♧'문찬국'(文讚國, 1995~) ☆ §", "애플은 옳고 그름에 대한 감각이 없으며 진실을 외면했다라며 비난했다."]), True)
