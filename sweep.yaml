@@ -1,0 +1,12 @@
+program: train.py
+method: bayes
+metric:
+  name: eval/micro f1 score
+  goal: maximize
+parameters:
+  learning_rate:
+    values: [1e-5, 3e-5, 5e-5]
+  num_train_epochs:
+    values: [3, 4, 5]
+  per_device_train_batch_size:
+    values: [32, 16]
