@@ -42,67 +42,54 @@ def preprocessing_dataset(dataset, filter, marking_mode):
   'subject_type':subject_type,'object_type':object_type, 'label':dataset['label'],})
   return out_dataset
 
-def load_data(dataset_dir, train=True, filter=False, marking_mode="normal"):
+def load_data(dataset_dir, train=True, filter=False, marking_mode="normal", aug_type=False, save=False):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
   train_test_split: choice_train_test_split, stratified_choice_train_test_split 
   sentence_filter: True, False
   marking_mode: normal, entity, typed_entity, typed_entity_punc
-  """
-  pd_dataset = pd.read_csv(dataset_dir)
-  # train_test split
-  if train:
-    pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
-    train_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
-    eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
-    return train_dataset, eval_dataset
-  else:
-    test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
-    return test_dataset
-
-def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", save=False):
-  """ 
-  csv 파일을 경로에 맡게 불러 옵니다. 
-  train_test_split: choice_train_test_split, stratified_choice_train_test_split 
-  sentence_filter: True, False
-  marking_mode: normal, entity, typed_entity, typed_entity_punc
+  aug_type: swap, aeda
   """
   pd_dataset = pd.read_csv(dataset_dir)
   if train:
-    ### 1) 데이터 로드
+    ### augmentation 적용 안하는 경우
     pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
-    train_dataset = preprocessing_swap(pd_train, False)
+    aug_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
     eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
 
-    ### 2) swap entity
-    swap_dataset = apply_swap(train_dataset)    
+    if aug_type == "swap":
+      train_dataset = preprocessing_swap(pd_train, False)
+      aug_dataset = apply_swap(train_dataset)  # swap entity
+      aug_dataset = preprocessing_dataset(aug_dataset, False, marking_mode=marking_mode)  # sentence_marking
+      # aug_dataset = swap_dataset
 
-    ### 3) marking mode 적용
-    swap_dataset = preprocessing_dataset(swap_dataset, False, marking_mode=marking_mode)  # sentence_marking
+      print("현재 사용중인 marking_mode: ", marking_mode)
+      print('원본 데이터 개수: ', len(train_dataset))
+      print('swap으로 증강한 데이터 개수: ', len(aug_dataset) - len(train_dataset))
+      print('원본+swap 데이터 개수: ', len(aug_dataset))
+      print('############################  Done with Swap Entity Augmentation ############################')
 
-    ### 4) aeda 수행
-    aug_dataset = aeda(swap_dataset)
+    elif aug_type == "aeda":
+      train_dataset = preprocessing_swap(pd_train, False)
+      swap_dataset = apply_swap(train_dataset)  # swap entity
+      swap_dataset = preprocessing_dataset(swap_dataset, False, marking_mode=marking_mode)  # sentence_marking
+      aug_dataset = aeda(swap_dataset)  # aeda
+
+      print("현재 사용중인 marking_mode: ", marking_mode)
+      print('원본 데이터 개수: ', len(train_dataset))
+      print('swap으로 증강한 데이터 개수: ', len(aug_dataset) - len(swap_dataset))
+      print('원본+swap 데이터 개수: ', len(swap_dataset))
+      print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(train_dataset))
+      print("aug 이후 데이터 개수: ", len(aug_dataset))
+      print('############################  Done with Swap Entity & AEDA Augmentation ############################')
 
     if save:
-      # aug_dataset.to_csv("final_aug_dataset.csv", index=False, encoding="utf-8-sig")
       save_dir = "final_aug_dataset_" + marking_mode + ".csv"
       aug_dataset.to_csv(save_dir, index=False, encoding="utf-8-sig")
-
-    print('원본 데이터 개수: ', len(train_dataset))
-    print('swap으로 증강한 데이터 개수: ', len(swap_dataset) - len(train_dataset))
-    print('원본+swap 데이터 개수: ', len(swap_dataset))
-
-    print("현재 사용중인 marking_mode: ", marking_mode)
-    print("aeda 이전 데이터 개수: ", len(swap_dataset))
-    print("aeda로 증강한 데이터 개수: ", len(aug_dataset) - len(swap_dataset))
-    print("aug 이후 데이터 개수: ", len(aug_dataset))
-    print('############################  Done  ############################')
-
     return aug_dataset, eval_dataset
   else:
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
-
 
 ## sentence 전처리
 def sentence_filter(sentence, filter=False):
