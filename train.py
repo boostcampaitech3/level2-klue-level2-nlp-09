@@ -11,6 +11,7 @@ import wandb
 import json
 import random
 from test_recording import *
+from custom_trainer import MyTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -86,6 +87,7 @@ def train():
     marking_mode = config['marking_mode']    # marking_mode
     tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
+    loss_name = config['loss_name']  #loss_name
   
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
@@ -159,13 +161,16 @@ def train():
   )
   # save test result 
   save_record(config, training_args)
-  trainer = Trainer(
+  trainer = MyTrainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)], #EarlyStopping callbacks
+    original_dataset = train_dataset,
+    device = device,
+    loss_name = loss_name                 # set loss for backpropagation
   )
 
   # train model
