@@ -1,4 +1,4 @@
-program: train.py
+program: train_HP.py
 method: bayes
 metric:
   name: eval/micro f1 score
