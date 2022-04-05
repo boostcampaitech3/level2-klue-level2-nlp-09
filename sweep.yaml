@@ -1,5 +1,5 @@
 program: train_HP.py
-method: bayes
+method: grid
 metric:
   name: eval/micro f1 score
   goal: maximize
