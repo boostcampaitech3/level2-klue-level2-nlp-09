@@ -139,9 +139,9 @@ def train():
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
-    # num_train_epochs=5,              # total number of training epochs
-    # learning_rate=3e-5,               # learning_rate
-    # per_device_train_batch_size=32,  # batch size per device during training
+    num_train_epochs=5,              # total number of training epochs
+    learning_rate=3e-5,               # learning_rate
+    per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
     # added max_length in load_data.py
     warmup_ratio = 0.1,  # defalut 0
@@ -163,6 +163,7 @@ def train():
   )
   # save test result 
   save_record(config, training_args)
+  
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
