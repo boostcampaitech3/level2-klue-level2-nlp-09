@@ -2,12 +2,14 @@
                  "filter: [true, false]", 
                  "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
                  "tokenize_mode: ['default', 'multi', 'entity', 'typed_entity', typed_entity_punc]",
-                 "loss_name: ['default'(labelsmoother), 'f1', 'focal', 'ce','weightedce', 'rootweightedce' ]"],
+                 "loss_name: ['default'(labelsmoother), 'f1', 'focal', 'ce','weightedce', 'rootweightedce' ]",
+                 "train_dataloader: ['default', 'sequential']"],
                  
-    "test_name": "RL_ST_TP_TPSent_SOTA",
+    "test_name": "RL_ST_TP_TPSent_sent",
     "model_name" : "klue/roberta-large",                
     "sentence_filter" : false, 
-    "marking_mode" : "normal",
-    "tokenize_mode": "default",
-    "loss_name" : "focal"
+    "marking_mode" : "typed_entity_punc",
+    "tokenize_mode": "typed_entity_punc",
+    "loss_name" : "focal",
+    "train_dataloader" : "default"
 }
