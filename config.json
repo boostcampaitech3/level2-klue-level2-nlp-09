@@ -1,11 +1,13 @@
 {   "_comment": ["model_name: ['klue/bert-base', 'klue/roberta-large']",
                  "filter: [true, false]", 
                  "marking_mode: ['normal', 'entity', 'typed_entity', 'typed_entity_punc']",
-                 "tokenize_mode: ['default', 'multi', 'entity', 'typed_entity', typed_entity_punc]"],
+                 "tokenize_mode: ['default', 'multi', 'entity', 'typed_entity', typed_entity_punc]",
+                 "loss_name: ['default'(labelsmoother), 'f1', 'focal', 'ce','weightedce', 'rootweightedce' ]"],
                  
-    "test_name": "RL_ST_TP_TPSent_SOTA_HP",
-    "model_name" : "klue/roberta-large",                 
+    "test_name": "RL_ST_TP_TPSent_SOTA",
+    "model_name" : "klue/roberta-large",                
     "sentence_filter" : false, 
-    "marking_mode" : "typed_entity_punc",
-    "tokenize_mode": "typed_entity_punc"
+    "marking_mode" : "normal",
+    "tokenize_mode": "default",
+    "loss_name" : "focal"
 }
