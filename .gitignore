@@ -166,6 +166,7 @@ results/
 wandb/
 prediction/
 test_recording/
+ensemble_csv_list/
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

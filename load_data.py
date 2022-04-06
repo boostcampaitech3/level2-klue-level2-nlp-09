@@ -182,7 +182,7 @@ def tokenized_dataset(dataset, tokenizer, type):
       return_tensors="pt",
       padding=True,
       truncation=True,
-      max_length=512, # 512로 변경 가능
+      max_length=512, # 512로 변경 가능/ amp 미사용에 batch_size=32로 설정하면 256으로 줄여야 OOM 발생X
       add_special_tokens=True,
       )
   return tokenized_sentences
