@@ -60,6 +60,26 @@ def load_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
     test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
     return test_dataset
 
+def load_full_data(dataset_dir, train=True, filter=False ,marking_mode="normal"):
+  """ 
+  csv 파일을 경로에 맡게 불러 옵니다. 
+  train_test_split: choice_train_test_split, stratified_choice_train_test_split 
+  sentence_filter: True, False
+  marking_mode: normal, entity, typed_entity, typed_entity_punc
+  """
+  pd_dataset = pd.read_csv(dataset_dir)
+  # train_test split
+  if train:
+    # pd_train, pd_eval = stratified_choice_train_test_split(pd_dataset, test_size=0.2) 
+    # train_dataset = preprocessing_dataset(pd_train, filter, marking_mode)
+    # eval_dataset = preprocessing_dataset(pd_eval, filter, marking_mode)
+    train_full_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
+    print('train data 개수: ', len(train_full_dataset))
+    return train_full_dataset
+  else:
+    test_dataset = preprocessing_dataset(pd_dataset, filter, marking_mode)
+    return test_dataset
+
 def load_aug_data(dataset_dir, train=True, filter=False, marking_mode="normal", aug_type=False, save=False):
   """ 
   csv 파일을 경로에 맡게 불러 옵니다. 
@@ -182,7 +202,7 @@ def tokenized_dataset(dataset, tokenizer, type):
       return_tensors="pt",
       padding=True,
       truncation=True,
-      max_length=512, # 512로 변경 가능
+      max_length=256, # 512로 변경 가능/ amp 미사용에 batch_size=32로 설정하면 256으로 줄여야 OOM 발생X
       add_special_tokens=True,
       )
   return tokenized_sentences
