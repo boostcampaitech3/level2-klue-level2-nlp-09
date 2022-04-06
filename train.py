@@ -5,7 +5,18 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import (
+  AutoTokenizer, 
+  AutoConfig, 
+  AutoModelForSequenceClassification, 
+  Trainer, 
+  TrainingArguments, 
+  RobertaConfig,
+  RobertaTokenizer, 
+  RobertaForSequenceClassification, 
+  BertTokenizer,
+  EarlyStoppingCallback
+)    
 from load_data import *
 import wandb
 import json
@@ -78,6 +89,16 @@ def label_to_num(label):
     num_label.append(dict_label_to_num[v])
   return num_label
 
+def sort_by_len(dataset):
+  """ dataframe을 sentence 길이로 정렬해 반환 """
+
+  sent_len = list(dataset['sentence'])
+  each_sent_len = [len(sent) for sent in sent_len]
+
+  dataset['length'] = each_sent_len
+  dataset = dataset.sort_values(by = ['length'])
+  return dataset
+
 def train():
   # load_parameter: tokenizer, sentence preprocessing
   with open("config.json","r") as js:
@@ -88,6 +109,7 @@ def train():
     tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
     loss_name = config['loss_name']  #loss_name
+    train_dataloader = config['train_dataloader']
   
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
@@ -100,6 +122,8 @@ def train():
   dataset_dir = "../dataset/train/train.csv"
   train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
   # train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode, aug_type="swap", save=True)  # augmentation 사용시
+  if train_dataloader == "sequential":
+   train_dataset = sort_by_len(train_dataset)  # 문장 길이로 정렬
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -174,10 +198,11 @@ def train():
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    # callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
     original_dataset = train_dataset,
     device = device,
-    loss_name = loss_name                 # set loss for backpropagation
+    loss_name = loss_name,                 # set loss for backpropagation
+    train_dataloader = train_dataloader
   )
 
   # train model

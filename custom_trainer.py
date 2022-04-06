@@ -12,6 +12,8 @@ import torch.nn.functional as F
 import transformers
 from transformers.trainer_pt_utils import LabelSmoother
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
 
 class FocalLoss(nn.Module):
@@ -57,46 +59,73 @@ class F1Loss(nn.Module):
 
 
 def read_dict_label_to_num():
-  with open('dict_label_to_num.pkl', 'rb') as f:
-    dict_label_to_num = pickle.load(f)
-  return dict_label_to_num
-
-class MyTrainer(Trainer):
-  """ 다양한 로스를 활용하기 위하여, 기존 트랜스포머 trainer를 overiding하기 위해 """
-  def __init__(self, loss_name, original_dataset, device, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    self.loss_name = loss_name
-    self.device = device
-
-    weight, rootweight = list(), list()
     with open('dict_label_to_num.pkl', 'rb') as f:
         dict_label_to_num = pickle.load(f)
-    for name in dict_label_to_num.keys():
-        # print( len(original_dataset[original_dataset['label'] == name]) )
-        weight.append(1/len(original_dataset[original_dataset['label'] == name]))
-        rootweight.append(1/math.sqrt(len(original_dataset[original_dataset['label'] == name])))
-    self.weight, self.rootweight = torch.Tensor(weight).cuda(), torch.Tensor(rootweight).cuda()
+    return dict_label_to_num
 
-  def compute_loss(self, model, inputs, return_outputs=False):
-    labels = inputs.get("labels")
-    model.cuda()
-    outputs = model(**inputs)
-    logits = outputs.get("logits") 
-  
-    if self.loss_name == 'ce':
-        custom_loss = torch.nn.CrossEntropyLoss()
-    elif self.loss_name == 'weightedce':
-        custom_loss = torch.nn.CrossEntropyLoss(weight = (self.weight))
-    elif self.loss_name == 'rootweightedce':
-        custom_loss = torch.nn.CrossEntropyLoss(weight = (self.rootweight))    
-    elif self.loss_name == 'focal':
-        custom_loss = FocalLoss()
-    elif self.loss_name == 'f1':
-        custom_loss = F1Loss()
-    elif self.loss_name == 'default':
-        custom_loss = LabelSmoother(epsilon=self.args.label_smoothing_factor)
-        loss = custom_loss(outputs, labels)
-        return (loss, outputs) if return_outputs else loss 
-    loss = custom_loss(logits, labels)
+class MyTrainer(Trainer):
+    """ 다양한 로스를 활용하기 위하여, 기존 트랜스포머 trainer를 overiding하기 위해 """
+    def __init__(self, loss_name, original_dataset, train_dataloader, device, *args, **kwargs):
+    # def __init__(self, loss_name, original_dataset, device, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_name = loss_name
+        self.device = device
+        self.train_dataloader = train_dataloader
 
-    return (loss, outputs) if return_outputs else loss
+        weight, rootweight = list(), list()
+        with open('dict_label_to_num.pkl', 'rb') as f:
+            dict_label_to_num = pickle.load(f)
+        for name in dict_label_to_num.keys():
+            # print( len(original_dataset[original_dataset['label'] == name]) )
+            weight.append(1/len(original_dataset[original_dataset['label'] == name]))
+            rootweight.append(1/math.sqrt(len(original_dataset[original_dataset['label'] == name])))
+        self.weight, self.rootweight = torch.Tensor(weight).cuda(), torch.Tensor(rootweight).cuda()
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        model.cuda()
+        outputs = model(**inputs)
+        logits = outputs.get("logits") 
+
+        if self.loss_name == 'ce':
+            custom_loss = torch.nn.CrossEntropyLoss()
+        elif self.loss_name == 'weightedce':
+            custom_loss = torch.nn.CrossEntropyLoss(weight = (self.weight))
+        elif self.loss_name == 'rootweightedce':
+            custom_loss = torch.nn.CrossEntropyLoss(weight = (self.rootweight))    
+        elif self.loss_name == 'focal':
+            custom_loss = FocalLoss()
+        elif self.loss_name == 'f1':
+            custom_loss = F1Loss()
+        elif self.loss_name == 'default':
+            custom_loss = LabelSmoother(epsilon=self.args.label_smoothing_factor)
+            loss = custom_loss(outputs, labels)
+            return (loss, outputs) if return_outputs else loss 
+        loss = custom_loss(logits, labels)
+
+        return (loss, outputs) if return_outputs else loss
+
+
+    def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
+        if self.train_dataloader == "sequential":
+            return SequentialSampler(self.train_dataset)  
+        else:
+            return RandomSampler(self.train_dataset)
+
+    def get_train_dataloader(self) -> DataLoader:
+        """ 데이터를 순서대로 불러오기 위해 SequentialSampler로 DataLoader 반환 """
+        if self.train_dataset is None:
+            raise ValueError("Trainer: training requires a train_dataset.")
+
+        train_dataset = self.train_dataset
+        train_sampler = self._get_train_sampler()
+
+        return DataLoader(
+            train_dataset,
+            batch_size=self.args.train_batch_size,
+            sampler=train_sampler,
+            collate_fn=self.data_collator,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
+            pin_memory=self.args.dataloader_pin_memory,
+        )
