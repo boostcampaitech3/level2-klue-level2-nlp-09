@@ -112,12 +112,12 @@ def train():
   
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
-  # tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
   # print(tokenizer.decode(tokenized_train['input_ids'][0]))
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
-  # RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
+  RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
 
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -172,7 +172,7 @@ def train():
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
-    eval_dataset=RE_train_dataset,             # evaluation dataset
+    eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
     # callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
     original_dataset = train_dataset,
