@@ -98,8 +98,7 @@ def train():
 
   # load dataset
   dataset_dir = "../dataset/train/train.csv"
-  # train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
-  train_dataset = load_full_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
   # train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode, aug_type="swap", save=True)  # augmentation 사용시
   train_label = label_to_num(train_dataset['label'].values)
   # dev_label = label_to_num(dev_dataset['label'].values)
