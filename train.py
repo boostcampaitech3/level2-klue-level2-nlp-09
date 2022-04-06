@@ -135,14 +135,14 @@ def train():
   
   project = "KLUE-test"  # W&B Projects
   entity_name = "level2-nlp-09"
-  display_name = "wandb-test"  # Model_name displayed in W&B Projects
+  display_name = wandb_name  # Model_name displayed in W&B Projects
   wandb.init(project=project, entity=entity_name, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
-    save_total_limit=5,              # number of total save model.
+    save_total_limit=10,              # number of total save model.
     save_steps=500,                 # model saving step.
     num_train_epochs=5,              # total number of training epochs
     learning_rate=3e-5,               # learning_rate
@@ -151,7 +151,7 @@ def train():
     # added max_length in load_data.py
     warmup_ratio = 0.1,  # defalut 0
     adam_epsilon = 1e-6, # default 1e-8
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
+    # warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
@@ -163,8 +163,8 @@ def train():
     load_best_model_at_end = True,
     metric_for_best_model = 'micro f1 score',
     report_to="wandb",  # enable logging to W&B
-    fp16 = True,        # whether to use 16bit (mixed) precision training
-    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
+    fp16 = False,        # whether to use 16bit (mixed) precision training
+    fp16_opt_level = 'None' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
   # save test result 
   save_record(config, training_args)
@@ -174,7 +174,7 @@ def train():
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
+    # callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
     original_dataset = train_dataset,
     device = device,
     loss_name = loss_name                 # set loss for backpropagation
