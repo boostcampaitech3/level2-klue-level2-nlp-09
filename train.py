@@ -1,3 +1,4 @@
+from cProfile import label
 import pickle as pickle
 import os
 import pandas as pd
@@ -5,12 +6,15 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import AutoModel, AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
 import wandb
 import json
 import random
 from test_recording import *
+import torch.nn as nn
+from custom_trainer import MyTrainer
+from model import *
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -86,6 +90,8 @@ def train():
     marking_mode = config['marking_mode']    # marking_mode
     tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
+    loss_name = config['loss_name']  #loss_name
+  
   
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
@@ -121,10 +127,10 @@ def train():
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
 
-  model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  model = BiLSTMAdded(model_name=MODEL_NAME)
   #resize models vocab_size(add add_token_num) 
-  model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
-  print(model.config)
+  model.pretrained.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
+  print(model.pretrained.config)
   model.parameters
   model.to(device)
   
@@ -139,9 +145,11 @@ def train():
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
     num_train_epochs=5,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
+    learning_rate=3e-5,               # learning_rate
+    per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
+    warmup_ratio = 0.1,  # defalut 0
+    adam_epsilon = 1e-6, # default 1e-8
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
@@ -152,7 +160,6 @@ def train():
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
-    metric_for_best_model = 'micro f1 score',
     report_to="wandb",  # enable logging to W&B
     fp16 = True,        # whether to use 16bit (mixed) precision training
     fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
@@ -164,13 +171,23 @@ def train():
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
-    compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    compute_metrics=compute_metrics         # define metrics function
+  )
+
+  trainer = MyTrainer(
+    model=model,                         # the instantiated 🤗 Transformers model to be trained
+    args=training_args,                  # training arguments, defined above
+    train_dataset=RE_train_dataset,         # training dataset
+    eval_dataset=RE_dev_dataset,             # evaluation dataset
+    compute_metrics=compute_metrics,        # define metrics function
+    original_dataset = train_dataset,
+    device = device,
+    loss_name = 'focal'            # define loss for training ['Default'(labelsmoother), 'F1', 'Focal', 'CE','WeightedCE', 'RootWeightedCE' ]
   )
 
   # train model
   trainer.train()
-  model.save_pretrained('./best_model')
+  torch.save(model.state_dict(), os.path.join("./best_model", 'pytorch_model.bin'))
 def main():
   train()
 

@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, AutoModel
 from torch.utils.data import DataLoader
 from load_data import *
 import pandas as pd
@@ -9,13 +9,14 @@ import pickle as pickle
 import numpy as np
 import argparse
 from tqdm import tqdm
+from model import *
 
 def inference(model, tokenized_sent, device):
   """
     test dataset을 DataLoader로 만들어 준 후,
     batch_size로 나눠 model이 예측 합니다.
   """
-  dataloader = DataLoader(tokenized_sent, batch_size=16, shuffle=False)
+  dataloader = DataLoader(tokenized_sent, batch_size=32, shuffle=False)
   model.eval()
   output_pred = []
   output_prob = []
@@ -26,7 +27,7 @@ def inference(model, tokenized_sent, device):
           attention_mask=data['attention_mask'].to(device),
           token_type_ids=data['token_type_ids'].to(device)
           )
-    logits = outputs[0]
+    logits = outputs["logits"]
     prob = F.softmax(logits, dim=-1).detach().cpu().numpy()
     logits = logits.detach().cpu().numpy()
     result = np.argmax(logits, axis=-1)
@@ -71,18 +72,21 @@ def main(args):
   tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
 
   # add_vocab
+  add_token_num= 0
   with open("marking_mode_tokens.json","r") as json_file:
     mode2special_token = json.load(json_file)
   if marking_mode != "normal" and  marking_mode != "typed_entity_punc":
-    tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
+    add_token_num += tokenizer.add_special_tokens({"additional_special_tokens":mode2special_token[marking_mode]})
 
   ## load my model
-  MODEL_NAME = args.model_dir # model dir.
-  model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
-  model.parameters
+  MODEL_NAME = load_model
+  model = BiLSTMAdded(load_model)
+  best_state_dict = torch.load(os.path.join(args.model_dir, 'pytorch_model.bin'))
+  model.pretrained.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
+  model.load_state_dict(best_state_dict)
   model.to(device)
 
-  ## load_test_datset
+    ## load_test_datset
   test_dataset_dir = "../dataset/test/test_data.csv"
   test_dataset = load_data(test_dataset_dir, train=False, filter=filter, marking_mode=marking_mode)
 
@@ -103,6 +107,7 @@ def main(args):
   output.to_csv('./prediction/submission.csv', index=False) 
   ###################  최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장. ##############################################
   print('---- Finish! ----')
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
