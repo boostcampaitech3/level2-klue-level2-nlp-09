@@ -22,6 +22,8 @@ import wandb
 import json
 import random
 from test_recording import *
+from datasets import load_dataset, load_metric
+from sklearn.metrics import classification_report
 from custom_trainer import MyTrainer
 
 def seed_everything(seed: int = 42):
@@ -69,6 +71,19 @@ def compute_metrics(pred):
   labels = pred.label_ids
   preds = pred.predictions.argmax(-1)
   probs = pred.predictions
+
+  label_list = ['no_relation', 'org:top_members/employees', 'org:members',
+       'org:product', 'per:title', 'org:alternate_names',
+       'per:employee_of', 'org:place_of_headquarters', 'per:product',
+       'org:number_of_employees/members', 'per:children',
+       'per:place_of_residence', 'per:alternate_names',
+       'per:other_family', 'per:colleagues', 'per:origin', 'per:siblings',
+       'per:spouse', 'org:founded', 'org:political/religious_affiliation',
+       'org:member_of', 'per:parents', 'org:dissolved',
+       'per:schools_attended', 'per:date_of_death', 'per:date_of_birth',
+       'per:place_of_birth', 'per:place_of_death', 'org:founded_by',
+       'per:religion']
+  print(classification_report(labels, preds, target_names=label_list))
 
   # calculate accuracy using sklearn's function
   f1 = klue_re_micro_f1(preds, labels)
