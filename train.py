@@ -5,12 +5,26 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import (
+  AutoTokenizer, 
+  AutoConfig, 
+  AutoModelForSequenceClassification, 
+  Trainer, 
+  TrainingArguments, 
+  RobertaConfig,
+  RobertaTokenizer, 
+  RobertaForSequenceClassification, 
+  BertTokenizer,
+  EarlyStoppingCallback
+)    
 from load_data import *
 import wandb
 import json
 import random
 from test_recording import *
+from datasets import load_dataset, load_metric
+from sklearn.metrics import classification_report
+from custom_trainer import MyTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -58,6 +72,19 @@ def compute_metrics(pred):
   preds = pred.predictions.argmax(-1)
   probs = pred.predictions
 
+  label_list = ['no_relation', 'org:top_members/employees', 'org:members',
+       'org:product', 'per:title', 'org:alternate_names',
+       'per:employee_of', 'org:place_of_headquarters', 'per:product',
+       'org:number_of_employees/members', 'per:children',
+       'per:place_of_residence', 'per:alternate_names',
+       'per:other_family', 'per:colleagues', 'per:origin', 'per:siblings',
+       'per:spouse', 'org:founded', 'org:political/religious_affiliation',
+       'org:member_of', 'per:parents', 'org:dissolved',
+       'per:schools_attended', 'per:date_of_death', 'per:date_of_birth',
+       'per:place_of_birth', 'per:place_of_death', 'org:founded_by',
+       'per:religion']
+  print(classification_report(labels, preds, target_names=label_list))
+
   # calculate accuracy using sklearn's function
   f1 = klue_re_micro_f1(preds, labels)
   auprc = klue_re_auprc(probs, labels)
@@ -77,6 +104,16 @@ def label_to_num(label):
     num_label.append(dict_label_to_num[v])
   return num_label
 
+def sort_by_len(dataset):
+  """ dataframe을 sentence 길이로 정렬해 반환 """
+
+  sent_len = list(dataset['sentence'])
+  each_sent_len = [len(sent) for sent in sent_len]
+
+  dataset['length'] = each_sent_len
+  dataset = dataset.sort_values(by = ['length'])
+  return dataset
+
 def train():
   # load_parameter: tokenizer, sentence preprocessing
   with open("config.json","r") as js:
@@ -86,6 +123,8 @@ def train():
     marking_mode = config['marking_mode']    # marking_mode
     tokenize_mode = config['tokenize_mode'] # tokenize_function
     wandb_name = config['test_name']
+    loss_name = config['loss_name']  #loss_name
+    train_dataloader = config['train_dataloader']
   
   # load model and tokenizer  # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = load_model
@@ -95,7 +134,11 @@ def train():
         "#################################################################################################################### \n")
 
   # load dataset
-  train_dataset, dev_dataset = load_data("../dataset/train/train.csv", train=True, filter=filter, marking_mode=marking_mode)
+  dataset_dir = "../dataset/train/train.csv"
+  train_dataset, dev_dataset = load_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode)
+  # train_dataset, dev_dataset = load_aug_data(dataset_dir, train=True, filter=filter, marking_mode=marking_mode, aug_type="swap", save=True)  # augmentation 사용시
+  if train_dataloader == "sequential":
+   train_dataset = sort_by_len(train_dataset)  # 문장 길이로 정렬
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
   
@@ -109,6 +152,7 @@ def train():
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer, tokenize_mode)
   tokenized_dev = tokenized_dataset(dev_dataset, tokenizer, tokenize_mode)
+  # print(tokenizer.decode(tokenized_train['input_ids'][0]))
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -124,25 +168,29 @@ def train():
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   #resize models vocab_size(add add_token_num) 
   model.resize_token_embeddings(tokenizer.vocab_size + add_token_num)
-  print(model.config)
+  # print(model.config)
   model.parameters
   model.to(device)
   
-  project = "KLUE-test" # W&B Projects
-  display_name = wandb_name # Model_name displayed in W&B Projects
-  wandb.init(project=project, name=display_name)
+  project = "KLUE-test"  # W&B Projects
+  entity_name = "level2-nlp-09"
+  display_name = wandb_name  # Model_name displayed in W&B Projects
+  wandb.init(project=project, entity=entity_name, name=display_name)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
-    save_total_limit=5,              # number of total save model.
+    save_total_limit=10,              # number of total save model.
     save_steps=500,                 # model saving step.
     num_train_epochs=5,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
+    learning_rate=3e-5,               # learning_rate
+    per_device_train_batch_size=32,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
+    # added max_length in load_data.py
+    warmup_ratio = 0.1,  # defalut 0
+    adam_epsilon = 1e-6, # default 1e-8
+    # warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
@@ -154,18 +202,22 @@ def train():
     load_best_model_at_end = True,
     metric_for_best_model = 'micro f1 score',
     report_to="wandb",  # enable logging to W&B
-    fp16 = True,        # whether to use 16bit (mixed) precision training
-    fp16_opt_level = 'O1' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
+    fp16 = False,        # whether to use 16bit (mixed) precision training
+    fp16_opt_level = 'None' # choose AMP optimization level (AMP Option:'O1' , 'O2')(FP32: 'O0')
   )
   # save test result 
   save_record(config, training_args)
-  trainer = Trainer(
+  trainer = MyTrainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics,         # define metrics function
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=3,early_stopping_threshold=0.0)] #EarlyStopping callbacks
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.0)], #EarlyStopping callbacks
+    original_dataset = train_dataset,
+    device = device,
+    loss_name = loss_name,                 # set loss for backpropagation
+    train_dataloader = train_dataloader
   )
 
   # train model
