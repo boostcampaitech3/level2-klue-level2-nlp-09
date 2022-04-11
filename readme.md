@@ -6,7 +6,7 @@
 
 ![public 6th](https://img.shields.io/badge/PUBLIC-6th-red?style=plastic) ![private 4th](https://img.shields.io/badge/PRIVATE-4th-red?style=plastic)
 
----
+
 ## MnM Team Introduction & Score
 
 ### Wrap-up Report 
@@ -32,7 +32,7 @@
 [detailTales](https://github.com/detailTales)|[nonegom](https://github.com/nonegom)|[wogkr810](https://github.com/wogkr810)|[maxha97](https://github.com/maxha97)|[HanNayeoniee](https://github.com/HanNayeoniee)
 gimty97@gmail.com|fksl9959@naver.com |jaehahk810@naver.com|maxha97@naver.com |nayeon2.han@gmail.com  
 
-
+### Members' Role
 | Member | Role | 
 | --- | --- |
 | 김태일 | input sentence tagging, custom model 제작 ,앙상블 코드 제작, 성능 검증 코드 제작 |
@@ -41,7 +41,7 @@ gimty97@gmail.com|fksl9959@naver.com |jaehahk810@naver.com|maxha97@naver.com |na
 | 하성진 | Custom Loss 구현 및 실험,  Entity Type Restriction 모델 구현 및 실험, KFold 코드 제작, AMP 적용 |
 | 한나연 | EDA, Data Augmentation, Curriculum Learning 적용, confusion matrix 시각화 |
   
----
+
 ## Description
 네이버 부스트캠프 AI Tech 3기 P-Stage(Level 2) NLP Competition을 위해 작성된 코드입니다. 해당 Competition에서는 [KLUE RE 데이터셋](https://klue-benchmark.com/tasks/70/overview/description)을 이용해서 **문장 내 개체간 관계 추출**작업을 시행합니다. 문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론하는 모델을 학습시킵니다.  
 
@@ -49,7 +49,7 @@ gimty97@gmail.com|fksl9959@naver.com |jaehahk810@naver.com|maxha97@naver.com |na
 
 문장 속에서 단어간에 관계성을 파악하는 것은 의미나 의도를 해석할 때 많은 도움이 되고, 그림의 예시와 같이 요약된 정보를 바탕으로 QA시스템과 같은 여타의 시스템 및 서비스 구성이 가능합니다. 관계 추출(Relation Extraction)은 문장의 단어(Entity)에 대한 속성과 관계를 예측하는 문제로, 자연어처리 응용 프로그램에서 중요한 Task입니다. 이번 대회에서는 문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론하는 모델을 학습시키고, 이를 통해 인공지능 모델이 단어들의 속성과 관계를 파악하며 개념을 학습할 수 있습니다.
 
----
+
 ## Usage
 ### 1) Installation
 - requirements.txt 파일을 install 합니다. 
@@ -72,7 +72,7 @@ python inference.py
 python inference.py --model_dir=./results/checkpoint-500
 ```
 
----
+
 ## Config
 train.py와 inference.py에서 동일한 실험 세팅을 위해 `config.json`을 사용할 수 있습니다. 
 
@@ -93,7 +93,7 @@ train.py와 inference.py에서 동일한 실험 세팅을 위해 `config.json`�
 
 - `loss_name`: `default`(labelsmoother), `f1`, `focal`, `ce`, `weightedce`, `rootweightedce`
 
----
+
 ## Git Commit Rule
 협업을 위해 [Git Commit Rule(깃허브 커밋 룰)](https://underflow101.tistory.com/31)을 참고해 Git Commit Rule을 설정했습니다. 
 ex) `feat: add new code`
