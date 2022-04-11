@@ -86,3 +86,23 @@ python inference.py
 ```
 python inference.py --model_dir=./results/checkpoint-500
 ```
+
+## Config
+Train.py와 inference.py에서 동일한 실험 세팅을 위해 `Config.json`을 사용할 수 있습니다. 
+
+- `model_name`: "klue/bert-base", "klue/roberta-large" 등 모델 주소를 입력으로 받습니다.
+- `filter`: true, false로 입력으로 받으며, true 시 특정 기호들을 제거 (※ 한자는 포함)
+- `marking_mode`: dataset 'sentence' 내 sub, obj Entity에 tagging
+    - `normal`: not use marking
+    - `entity`: [sub] {sub['word']} [/sub]
+    - `typed_entity`: <S:{sub['type']}> {sub['word']} </S:{sub['type']}>
+    - `typed_entity_punc`: @ * {sub['type']} * {sub['word']} @
+
+- `tokenized_function`: 'multi Sentence'를 만들 때 sub, obj Entity에 tagging
+    - `default`: sub['word'] + '[SEP]' + obj['word']
+    - `multi`: {sub['word']}[SEP]{obj['word']} 어떤 관계일까?
+    - `entity`: [sub]{sub['word']}[/sub] [obj]{obj['word']}[/obj] 어떤 관계일까?
+    - `typed_entity`: <S:{sub['type']}> {sub['word']} </S:{sub['type']}> <O:{obj['type]}> {obj['word']} </O:{obj['type]}> 어떤 관계일까?
+    - `typed_entity_func`: @ * {sub['type']} * {sub['word']} @ # ^ {obj['type]} ^ {obj['word']} # 어떤 관계일까?
+
+- `loss_name`: `default`(labelsmoother), `f1`, `focal`, `ce`, `weightedce`, `rootweightedce`
