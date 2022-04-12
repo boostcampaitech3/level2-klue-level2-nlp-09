@@ -60,7 +60,7 @@ pip install -r requirements.txt
 ```
 
 ### 2) Train model
-- `config.json`에서 setting 된 설정으로 모델을 학습시키며, 필요에 따라 [config.json](https://github.com/boostcampaitech3/level2-klue-level2-nlp-09/tree/develop#Config) 설정을 변경해, train.py를 실행할 수 있습니다. 현재 config.json의 경우 단일 SOTA 모델 setting으로 설정되어 있습니다. (단, 수정된 train.csv 파일을 사용했기에 일부 차이가 있을 수 있음)
+- `config.json`에서 setting 된 설정으로 모델을 학습시키며, 필요에 따라 [Config](https://github.com/boostcampaitech3/level2-klue-level2-nlp-09/tree/develop#Config) 설정을 변경해, train.py를 실행할 수 있습니다. 현재 `config.json`의 경우 단일 SOTA 모델 setting으로 설정되어 있습니다. (단, 수정된 train.csv 파일을 사용했기에 일부 차이가 있을 수 있음)
 ```
 python train.py
 ```
