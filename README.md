@@ -119,7 +119,6 @@ ex) `feat: add new code`
 ```bash
 (예시로 작성)
 level2-klue-level2-nlp-09
-│
 ├── README.md
 ├── requirements.txt
 ├── config.json
@@ -128,15 +127,14 @@ level2-klue-level2-nlp-09
 │   ├── confusion_matrix.ipynb
 │   ├── ensemble.ipynb
 │   └── test_model.ipynb
-│
 └── python
-│ ├── train.py
-│ ├── load_data.py
-│ ├── inference.py
-│ ├── training_loss.py
-│ ├── data_augmentation.py
-│ ├── test_recording.py
-│ └── train_sweep.py
+│   ├── train.py
+│   ├── load_data.py
+│   ├── inference.py
+│   ├── training_loss.py
+│   ├── data_augmentation.py
+│   ├── test_recording.py
+│   └── train_sweep.py
 └── etc
     ├── marking_mode_tokens.json
     ├── dict_num_to_label.pkl
