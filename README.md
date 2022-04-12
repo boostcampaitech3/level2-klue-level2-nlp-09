@@ -113,7 +113,7 @@ ex) `feat: add new code`
 (예시로 작성)
 level2-klue-level2-nlp-09
 ├── utils
-│   ├── EDA(Duplicate&Mislabeling).ipynb
+│   ├── eda(duplicate_mislabeling).ipynb
 │   ├── confusion_matrix.ipynb
 │   ├── ensemble.ipynb
 │   └── test_model.ipynb
