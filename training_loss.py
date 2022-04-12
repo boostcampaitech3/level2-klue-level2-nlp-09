@@ -63,7 +63,7 @@ def read_dict_label_to_num():
         dict_label_to_num = pickle.load(f)
     return dict_label_to_num
 
-class MyTrainer(Trainer):
+class CustomTrainer(Trainer):
     """ 다양한 로스를 활용하기 위하여, 기존 트랜스포머 trainer를 overiding하기 위해 """
     def __init__(self, loss_name, original_dataset, train_dataloader, device, *args, **kwargs):
     # def __init__(self, loss_name, original_dataset, device, *args, **kwargs):

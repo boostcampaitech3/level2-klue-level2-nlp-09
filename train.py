@@ -24,7 +24,7 @@ import random
 from test_recording import *
 from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
-from custom_trainer import MyTrainer
+from training_loss import CustomTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -208,7 +208,9 @@ def train():
   )
   # save test result 
   save_record(config, training_args)
-  trainer = MyTrainer(
+
+  # use custom trainer for using custom training loss
+  trainer = CustomTrainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
