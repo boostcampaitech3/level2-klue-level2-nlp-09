@@ -1,18 +1,15 @@
-# P stage(Level 2) - KLUE Data Competition_NLP09 (MnM)
-> 문장 내 개체간 관계 추출(Relation Extraction)
-
 # KLUE Relation Extraction Competition - NLP 9조(MnM)
-> Naver Boostcamp AI Tech 3rd - Level2 P stage
+> 네이버 부스트캠프 AI Tech 3기 P-Stage(Level 2) NLP Competition을 위해 작성된 코드입니다. 해당 Competition에서는 [KLUE RE 데이터셋](https://klue-benchmark.com/tasks/70/overview/description)을 이용해서 **문장 내 개체간 관계 추출**작업을 시행합니다. 문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론하는 모델을 학습시킵니다. 
 
+## MnM Team Introduction & Score 
+
+### Score  
 ![public 6th](https://img.shields.io/badge/PUBLIC-6th-red?style=plastic) ![private 4th](https://img.shields.io/badge/PRIVATE-4th-red?style=plastic)
-
-
-## MnM Team Introduction & Score
 
 ### Wrap-up Report 
 
 <a href="https://colorful-bug-b35.notion.site/NLP-9-MnM-Wrap-up-report-6d20d7353b7a4e11befe2096c8246f9e"><img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" width="50"/></a>
-**Click Logo**
+**[>>>Click Here<<<](https://colorful-bug-b35.notion.site/NLP-9-MnM-Wrap-up-report-6d20d7353b7a4e11befe2096c8246f9e)**
 
 
 ### Team Logo  
@@ -43,11 +40,7 @@ gimty97@gmail.com|fksl9959@naver.com |jaehahk810@naver.com|maxha97@naver.com |na
   
 
 ## Description
-네이버 부스트캠프 AI Tech 3기 P-Stage(Level 2) NLP Competition을 위해 작성된 코드입니다. 해당 Competition에서는 [KLUE RE 데이터셋](https://klue-benchmark.com/tasks/70/overview/description)을 이용해서 **문장 내 개체간 관계 추출**작업을 시행합니다. 문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론하는 모델을 학습시킵니다.  
-
-![description](https://user-images.githubusercontent.com/46811558/162737224-113bf211-e380-4109-9ed4-d511e3d13eba.png)
-
-문장 속에서 단어간에 관계성을 파악하는 것은 의미나 의도를 해석할 때 많은 도움이 되고, 그림의 예시와 같이 요약된 정보를 바탕으로 QA시스템과 같은 여타의 시스템 및 서비스 구성이 가능합니다. 관계 추출(Relation Extraction)은 문장의 단어(Entity)에 대한 속성과 관계를 예측하는 문제로, 자연어처리 응용 프로그램에서 중요한 Task입니다. 이번 대회에서는 문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론하는 모델을 학습시키고, 이를 통해 인공지능 모델이 단어들의 속성과 관계를 파악하며 개념을 학습할 수 있습니다.
+문장 속에서 단어간에 관계성을 파악하는 것은 의미나 의도를 해석할 때 많은 도움이 되고, 요약된 정보를 바탕으로 QA시스템과 같은 여타의 시스템 및 서비스 구성이 가능합니다. **관계 추출(Relation Extraction) 은 문장의 단어(Entity)에 대한 속성과 관계를 예측하는 문제로**, 자연어처리 응용 프로그램에서 중요한 Task입니다. 이번 대회에서는 **문장, 단어에 대한 정보를 통해 문장 속에서 단어 사이의 관계를 추론**하는 모델을 학습시키고, 이를 통해 인공지능 모델이 단어들의 속성과 관계를 파악하며 개념을 학습할 수 있습니다.
 
 
 ## Usage
@@ -132,6 +125,3 @@ level2-klue-level2-nlp-09
 ├── test_recording.py
 └── train_sweep.py
 ```
-
-## Wrap Up Report Link
-[랩업 리포트 링크](https://colorful-bug-b35.notion.site/NLP-9-MnM-Wrap-up-report-6d20d7353b7a4e11befe2096c8246f9e)
