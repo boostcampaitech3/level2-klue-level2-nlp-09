@@ -115,7 +115,8 @@ ex) `feat: add new code`
 - etc       : 기타
 ```
 
----
 ## Code Structure
+
+
 ## Wrap Up Report Link
 [랩업 리포트 링크](https://colorful-bug-b35.notion.site/NLP-9-MnM-Wrap-up-report-6d20d7353b7a4e11befe2096c8246f9e)
