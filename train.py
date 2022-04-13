@@ -24,7 +24,7 @@ import random
 from test_recording import *
 from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
-from custom_trainer import MyTrainer
+from training_loss import CustomTrainer
 
 def seed_everything(seed: int = 42):
     """Random seed(Reproducibility)"""
@@ -179,6 +179,7 @@ def train():
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
+  # 현재 TrainingArguments에 정의된 디폴트 파라미터와 config.json 파일에서의 옵션값은 SOTA 모델에 사용된 값으로 성능을 재현할 수 있습니다 
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
     save_total_limit=10,              # number of total save model.
@@ -207,7 +208,9 @@ def train():
   )
   # save test result 
   save_record(config, training_args)
-  trainer = MyTrainer(
+
+  # use custom trainer for using custom training loss
+  trainer = CustomTrainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
