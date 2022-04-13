@@ -110,7 +110,6 @@ ex) `feat: add new code`
 
 ## Code Structure
 ```bash
-(예시로 작성)
 level2-klue-level2-nlp-09
 ├── utils
 │   ├── eda(duplicate_mislabeling).ipynb
